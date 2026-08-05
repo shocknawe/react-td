@@ -312,17 +312,14 @@ export function Battle({ engine, createRenderer, createInitialState }: BattlePro
         )}
       </div>
       <div className="bottom">
-        {currentTower ? (
-          <TowerPanel
-            tower={{ towerId: currentTower.id, element: currentTower.el, tier: currentTower.tier }}
-            mana={mana}
-            onUpgrade={() => loopRef.current?.dispatch({ t: "upgrade", towerId: currentTower.id })}
-            onSell={() => {
-              loopRef.current?.dispatch({ t: "sell", towerId: currentTower.id });
-              selectTower(null);
-            }}
-          />
-        ) : (
+        {/* Both slots are always in the DOM, stacked in the same CSS grid cell (see
+         * .bottom-slot) — only the inactive one gets visibility:hidden. This reserves
+         * layout space for whichever is taller, so .bottom's height never changes when
+         * a tower gets selected/deselected. It used to conditionally render only one:
+         * the rail and TowerPanel have different natural heights, so .field (flex: 1
+         * above .bottom) resized on every selection, and the canvas resizing inside it
+         * read as "everything moves". */}
+        <div className="bottom-slot" aria-hidden={currentTower != null} style={{ visibility: currentTower ? "hidden" : "visible" }}>
           <div className="rail">
             {ELEMENT_ORDER.map((el, i) => (
               <MageCard
@@ -334,7 +331,20 @@ export function Battle({ engine, createRenderer, createInitialState }: BattlePro
               />
             ))}
           </div>
-        )}
+        </div>
+        <div className="bottom-slot" aria-hidden={currentTower == null} style={{ visibility: currentTower ? "visible" : "hidden" }}>
+          {currentTower && (
+            <TowerPanel
+              tower={{ towerId: currentTower.id, element: currentTower.el, tier: currentTower.tier }}
+              mana={mana}
+              onUpgrade={() => loopRef.current?.dispatch({ t: "upgrade", towerId: currentTower.id })}
+              onSell={() => {
+                loopRef.current?.dispatch({ t: "sell", towerId: currentTower.id });
+                selectTower(null);
+              }}
+            />
+          )}
+        </div>
       </div>
     </>
   );
