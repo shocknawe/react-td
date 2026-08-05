@@ -11,7 +11,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { SimState, StageDef } from "../game/types";
 import { getStage } from "../data";
 import { createInitialState, makeRendererAdapter, makeSimEngine } from "../state/integration";
-import type { RendererLike, SimEngine } from "../state/loop";
+import type { SimEngine } from "../state/loop";
+import type { RendererFactory } from "./screens/Battle";
 import { useStore } from "../state/store";
 import { Battle } from "./screens/Battle";
 import { MageInfo } from "./screens/MageInfo";
@@ -38,12 +39,17 @@ export function App() {
   const activeStageId = useStore((s) => s.activeStageId);
   const settings = useStore((s) => s.settings);
 
-  // Engine is built from the StageDef; renderer is built from the canvas, which only
-  // exists once Battle is mounted. We hold the engine in a ref keyed on stageId so a
-  // stage change re-binds it. Battle reads these via props.
+  // Engine is built from the StageDef and held in a ref keyed on stageId so a stage
+  // change re-binds it. Battle reads it via props.
+  //
+  // The renderer is NOT built here, even though it also only depends on the StageDef —
+  // it additionally needs a live <canvas>, which only exists once Battle has mounted.
+  // An earlier version tried to build it here anyway, via a ref callback on Battle's
+  // canvas, and gated Battle's very existence on that ref already being populated —
+  // a deadlock (Battle can't mount without a renderer; the renderer can't exist without
+  // Battle's canvas). Instead we hand Battle a *factory* closure and let it build its
+  // own renderer once its canvas is guaranteed to exist (see Battle.tsx's mount effect).
   const engineRef = useRef<SimEngine | null>(null);
-  const rendererRef = useRef<RendererLike | null>(null);
-  const rendererDestroyRef = useRef<(() => void) | null>(null);
   const [battleKey, setBattleKey] = useState(0);
 
   // Rebuild the engine whenever the active stage id changes (start of a new battle).
@@ -56,12 +62,6 @@ export function App() {
     if (!stage) return;
     engineRef.current = makeSimEngine(stage);
     setBattleKey((k) => k + 1);
-    return () => {
-      // Tear down the renderer when leaving battle.
-      rendererDestroyRef.current?.();
-      rendererDestroyRef.current = null;
-      rendererRef.current = null;
-    };
   }, [activeStageId]);
 
   // Apply reduced-motion data attribute at the root so the CSS rule in index.css gates
@@ -80,32 +80,28 @@ export function App() {
     [],
   );
 
-  // A ref callback the Battle uses to hand back its canvas so we can build the renderer
-  // on mount. We build the renderer here rather than inside Battle so Battle stays free
-  // of integration knowledge.
-  const attachCanvas = (canvas: HTMLCanvasElement | null) => {
-    if (!canvas || !activeStageId) return;
-    const stage = resolveStage(activeStageId);
-    if (!stage) return;
-    // Tear down any prior renderer bound to a previous canvas.
-    rendererDestroyRef.current?.();
-    const { renderer, destroy } = makeRendererAdapter(canvas, stage);
-    rendererRef.current = renderer;
-    rendererDestroyRef.current = destroy;
-  };
+  // Handed to Battle as a prop; Battle calls this once its own canvas ref is populated
+  // (guaranteed non-null by then) rather than the other way around.
+  const createRendererFn: RendererFactory = useMemo(
+    () => (canvas: HTMLCanvasElement) => {
+      const stage = resolveStage(activeStageId ?? "");
+      if (!stage) throw new Error(`App: unknown stage id "${activeStageId}"`);
+      return makeRendererAdapter(canvas, stage);
+    },
+    [activeStageId],
+  );
 
   return (
     <div className="app-shell">
       <div className="stage-frame" data-screen={screen}>
         {screen === "title" && <Title />}
         {screen === "stageSelect" && <StageSelect />}
-        {screen === "battle" && activeStageId && engineRef.current && rendererRef.current && (
+        {screen === "battle" && activeStageId && engineRef.current && (
           <Battle
             key={battleKey}
             engine={engineRef.current}
-            renderer={rendererRef.current}
+            createRenderer={createRendererFn}
             createInitialState={createInitialStateFn}
-            canvasRef={attachCanvas}
           />
         )}
         {screen === "mageInfo" && <MageInfo />}
