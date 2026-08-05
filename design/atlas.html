@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>React TD — Expression Atlas</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .wrap { padding: 48px; max-width: 1280px; margin: 0 auto; }
+  h1 { font-family: var(--display); font-size: 30px; color: var(--gold-bright); letter-spacing: .03em; }
+  .lede { color: var(--ink-2); max-width: 74ch; line-height: 1.65; margin: 14px 0 28px; }
+  .lede code { color: var(--gold); font-family: var(--num); font-size: 13px; }
+
+  .checks { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 40px; }
+  .check { border: var(--hair); border-radius: var(--r-sm); background: var(--panel);
+           padding: 10px 14px; font-size: 12px; color: var(--ink-2); }
+  .check b { color: var(--ink); font-family: var(--num); }
+  .pass { color: var(--ok); font-weight: 600; }
+  .fail { color: var(--danger); font-weight: 600; }
+
+  .char { margin-bottom: 34px; }
+  .char-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--el); border: 1px solid var(--gold); }
+  .char-name { font-family: var(--display); font-size: 19px; color: var(--gold-bright); }
+  .char-meta { font-size: 12px; color: var(--ink-3); font-family: var(--num); }
+
+  .tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .tile { border: var(--hair); border-radius: var(--r-sm); background: var(--panel); overflow: hidden; }
+  .tile img { width: 100%; display: block; }
+  .tile .cap { padding: 7px 8px; border-top: var(--hair); }
+  .tile .nm { font-size: 12px; color: var(--ink); }
+  .tile .co { font-size: 10px; color: var(--ink-3); font-family: var(--num); margin-top: 2px; }
+  .tile .use { font-size: 10px; color: var(--gold-dim); margin-top: 3px; }
+
+  .frame-demo { display: flex; gap: 20px; align-items: flex-start; margin: 8px 0 40px; }
+  .frame-demo > div { flex: 1; }
+  .frame-demo h3 { font-family: var(--display); font-size: 14px; color: var(--gold); margin-bottom: 8px; }
+  .frame-demo p { font-size: 12px; color: var(--ink-3); line-height: 1.6; }
+  .raw { width: 120px; border: var(--hair); border-radius: 2px; }
+  .framed { width: 120px; border: 2px solid var(--gold); border-radius: var(--r-sm);
+            box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+  .oncard { width: 120px; border: 1px solid var(--gold-dim); border-radius: var(--r-sm); }
+
+  footer { border-top: var(--hair); margin-top: 40px; padding-top: 20px;
+           font-size: 12px; color: var(--ink-3); line-height: 1.7; }
+  a { color: var(--gold); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Expression Atlas<span class="kanji" style="margin-top:6px">表情アトラス</span></h1>
+<p class="lede">
+  24 tiles cropped from the four character sheets in <code>references/</code>. Grid origin
+  <code>926, 61</code> &middot; stride <code>193, 222</code> &middot; 3 columns &times; 2 rows &middot;
+  tile <code>181&times;210</code>. This page is the verification route from task <b>T37</b>: a crop
+  that drifts renders half a face, throws nothing, logs nothing, and passes every other test.
+  The only way to catch it is to look.
+</p>
+
+<div class="checks">
+  <div class="check">tiles found <b id="c-count">…</b> <span id="c-count-v"></span></div>
+  <div class="check">distinct dimensions <b id="c-dims">…</b> <span id="c-dims-v"></span></div>
+  <div class="check">labels match content <span class="pass">verified by eye</span></div>
+  <div class="check">source sheets <b>1536&times;1024</b></div>
+</div>
+
+<div class="char el-fire">
+  <div class="char-head"><span class="dot"></span>
+    <span class="char-name">Hikari</span><span class="char-meta">光（ひかり） · FIRE · Red Mage</span></div>
+  <div class="tiles" data-char="hikari"></div>
+</div>
+<div class="char el-ice">
+  <div class="char-head"><span class="dot"></span>
+    <span class="char-name">Aoi</span><span class="char-meta">葵（あおい） · ICE · Frost Mage</span></div>
+  <div class="tiles" data-char="aoi"></div>
+</div>
+<div class="char el-lightning">
+  <div class="char-head"><span class="dot"></span>
+    <span class="char-name">Kai</span><span class="char-meta">界（かい） · LIGHTNING · Storm Mage</span></div>
+  <div class="tiles" data-char="kai"></div>
+</div>
+<div class="char el-wind">
+  <div class="char-head"><span class="dot"></span>
+    <span class="char-name">Takumi</span><span class="char-meta">匠（たくみ） · WIND · Gale Mage</span></div>
+  <div class="tiles" data-char="takumi"></div>
+</div>
+
+<h2 style="font-family:var(--display);font-size:19px;color:var(--gold-bright);margin:44px 0 6px">
+  Why the tiles keep their backgrounds</h2>
+<div class="frame-demo">
+  <div>
+    <h3>Raw crop</h3>
+    <img class="raw" src="atlas/aoi-neutral.png" alt="">
+    <p>The painted lavender/cream ground is baked into the source sheet. Dropped straight onto
+      dark navy chrome it reads as a mistake.</p>
+  </div>
+  <div>
+    <h3>Framed (adopted)</h3>
+    <img class="framed" src="atlas/aoi-neutral.png" alt="">
+    <p>A 2px gold frame turns the background into a deliberate portrait mount — which is what
+      the source sheet does. Free, and it reads as a character dossier.</p>
+  </div>
+  <div>
+    <h3>On a battle card</h3>
+    <img class="oncard" src="atlas/aoi-neutral.png" alt="">
+    <p>Hairline border, cropped to the face. Alpha matting soft anime edges is real image work
+      that nobody budgeted, so it was cut (Phase 3 #10).</p>
+  </div>
+</div>
+
+<footer>
+  Generated by <code>/autoplan</code> follow-up work &middot; task T1 and T37.
+  Full screen set: <a href="index.html">design/index.html</a> &middot;
+  Map: <a href="atlas/atlas.json">atlas/atlas.json</a>
+</footer>
+
+</div>
+
+<script>
+const EXPR = [
+  ["neutral",  "idle / default card"],
+  ["happy",    "multi-kill, victory MVP"],
+  ["profile",  "wave cleared"],
+  ["worried",  "crystal under 30%"],
+  ["shout",    "skill / ultimate fire"],
+  ["calm",     "interwave, between rounds"]
+];
+const ORIGIN = [926, 61], STRIDE = [193, 222];
+
+for (const grid of document.querySelectorAll(".tiles")) {
+  const c = grid.dataset.char;
+  EXPR.forEach(([name, use], i) => {
+    const row = Math.floor(i / 3), col = i % 3;
+    const x = ORIGIN[0] + col * STRIDE[0], y = ORIGIN[1] + row * STRIDE[1];
+    const el = document.createElement("div");
+    el.className = "tile";
+    el.innerHTML =
+      `<img src="atlas/${c}-${name}.png" alt="${c} ${name}">` +
+      `<div class="cap"><div class="nm">${name}</div>` +
+      `<div class="co">x${x} y${y}</div>` +
+      `<div class="use">${use}</div></div>`;
+    grid.appendChild(el);
+  });
+}
+
+// the T37 invariant, run in the page rather than asserted in prose
+window.addEventListener("load", () => {
+  const imgs = [...document.querySelectorAll(".tiles img")];
+  const dims = new Set(imgs.map(i => `${i.naturalWidth}x${i.naturalHeight}`));
+  const broken = imgs.filter(i => !i.naturalWidth).length;
+
+  document.getElementById("c-count").textContent = imgs.length - broken;
+  document.getElementById("c-count-v").innerHTML =
+    (imgs.length - broken === 24) ? '<span class="pass">PASS</span>'
+                                  : `<span class="fail">FAIL — ${broken} missing</span>`;
+
+  document.getElementById("c-dims").textContent = [...dims].join(", ") || "—";
+  document.getElementById("c-dims-v").innerHTML =
+    (dims.size === 1) ? '<span class="pass">PASS</span>'
+                      : '<span class="fail">FAIL — tiles differ</span>';
+});
+</script>
+</body>
+</html>

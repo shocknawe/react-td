@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>React TD — magic circle generator</title>
+<style>
+  body { background:#070a14; color:#a8b4d4; font-family:-apple-system,sans-serif; padding:24px; }
+  h1 { color:#f4d98a; font-size:18px; font-weight:500; }
+  p { font-size:12px; max-width:80ch; line-height:1.6; }
+  .grid { display:grid; grid-template-columns:repeat(3,auto); gap:14px; margin-top:20px; }
+  figure { margin:0; text-align:center; }
+  canvas { background:#0d1424; border:1px solid #8a6d2b; border-radius:4px; width:200px; height:200px; }
+  figcaption { font-size:10px; margin-top:5px; font-family:ui-monospace,monospace; color:#6b7799; }
+</style>
+</head>
+<body>
+<h1>Element magic circles — procedural, 512&times;512, transparent</h1>
+<p>Drawn in code, not diffusion. Tier is carried by ring count: T1 one ring, T2 two rings plus a
+rune band, T3 three rings plus an orbiting mote. This is the decal that sits under each placed
+mage, and it is what makes tower tier legible on the battlefield (task T20).</p>
+<div class="grid" id="grid"></div>
+
+<script>
+const ELEMENTS = {
+  fire:      { core:"#e05a3a", glow:"#ff8a5c", deep:"#b3202e" },
+  ice:       { core:"#2f6fd0", glow:"#7fb4ee", deep:"#1b3f8f" },
+  lightning: { core:"#f0c64a", glow:"#fff0b8", deep:"#c99a1e" },
+  wind:      { core:"#4e9c63", glow:"#a8d8a0", deep:"#1f6b45" },
+};
+const S = 512, C = S / 2;
+
+function ring(g, r, w, color, alpha, dash) {
+  g.save(); g.globalAlpha = alpha; g.strokeStyle = color; g.lineWidth = w;
+  if (dash) g.setLineDash(dash);
+  g.beginPath(); g.arc(C, C, r, 0, Math.PI * 2); g.stroke(); g.restore();
+}
+
+function ticks(g, r, n, len, w, color, alpha) {
+  g.save(); g.globalAlpha = alpha; g.strokeStyle = color; g.lineWidth = w;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    g.beginPath();
+    g.moveTo(C + Math.cos(a) * r, C + Math.sin(a) * r);
+    g.lineTo(C + Math.cos(a) * (r + len), C + Math.sin(a) * (r + len));
+    g.stroke();
+  }
+  g.restore();
+}
+
+// geometric rune band — glyph-like marks, never real characters
+function runes(g, r, n, color, alpha) {
+  g.save(); g.globalAlpha = alpha; g.strokeStyle = color; g.lineWidth = 2.5;
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2;
+    g.save();
+    g.translate(C + Math.cos(a) * r, C + Math.sin(a) * r);
+    g.rotate(a + Math.PI / 2);
+    const k = i % 4;
+    g.beginPath();
+    if (k === 0) { g.moveTo(-6,-7); g.lineTo(6,-7); g.moveTo(0,-7); g.lineTo(0,7); }
+    else if (k === 1) { g.moveTo(-6,7); g.lineTo(0,-7); g.lineTo(6,7); }
+    else if (k === 2) { g.moveTo(-6,-6); g.lineTo(6,6); g.moveTo(6,-6); g.lineTo(-6,6); }
+    else { g.moveTo(-5,-7); g.lineTo(5,-2); g.lineTo(-5,3); g.lineTo(5,8); }
+    g.stroke(); g.restore();
+  }
+  g.restore();
+}
+
+function polygon(g, r, n, rot, color, w, alpha) {
+  g.save(); g.globalAlpha = alpha; g.strokeStyle = color; g.lineWidth = w;
+  g.beginPath();
+  for (let i = 0; i <= n; i++) {
+    const a = rot + (i / n) * Math.PI * 2;
+    const x = C + Math.cos(a) * r, y = C + Math.sin(a) * r;
+    i ? g.lineTo(x, y) : g.moveTo(x, y);
+  }
+  g.stroke(); g.restore();
+}
+
+// per-element inner geometry: each must be tellable apart as a SHAPE, not by hue
+function core(g, el, p, r) {
+  g.save(); g.strokeStyle = p.glow; g.lineWidth = 3; g.globalAlpha = .95;
+  if (el === "fire") {
+    // six teardrop petals
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      g.save(); g.translate(C, C); g.rotate(a);
+      g.beginPath(); g.moveTo(0, -r);
+      g.quadraticCurveTo(r * .42, -r * .34, 0, r * .16);
+      g.quadraticCurveTo(-r * .42, -r * .34, 0, -r);
+      g.stroke(); g.restore();
+    }
+  } else if (el === "ice") {
+    // hexagonal lattice with barbed spokes
+    polygon(g, r, 6, -Math.PI / 2, p.glow, 3, .95);
+    polygon(g, r * .55, 6, Math.PI / 6, p.glow, 2, .7);
+    for (let i = 0; i < 6; i++) {
+      const a = -Math.PI / 2 + (i / 6) * Math.PI * 2;
+      g.beginPath();
+      g.moveTo(C, C); g.lineTo(C + Math.cos(a) * r, C + Math.sin(a) * r);
+      const bx = C + Math.cos(a) * r * .62, by = C + Math.sin(a) * r * .62;
+      g.moveTo(bx, by); g.lineTo(bx + Math.cos(a + 2.4) * 22, by + Math.sin(a + 2.4) * 22);
+      g.moveTo(bx, by); g.lineTo(bx + Math.cos(a - 2.4) * 22, by + Math.sin(a - 2.4) * 22);
+      g.stroke();
+    }
+  } else if (el === "lightning") {
+    // radial zigzag spokes
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      g.save(); g.translate(C, C); g.rotate(a);
+      g.beginPath();
+      g.moveTo(0, -r * .22); g.lineTo(r * .16, -r * .52);
+      g.lineTo(-r * .10, -r * .60); g.lineTo(r * .12, -r);
+      g.stroke(); g.restore();
+    }
+    polygon(g, r * .3, 3, -Math.PI / 2, p.glow, 2.5, .8);
+  } else {
+    // wind: nested spiral arcs
+    for (let i = 0; i < 3; i++) {
+      const a0 = (i / 3) * Math.PI * 2;
+      g.beginPath();
+      for (let t = 0; t <= 1.001; t += .02) {
+        const a = a0 + t * Math.PI * 1.35, rr = r * (.28 + t * .72);
+        const x = C + Math.cos(a) * rr, y = C + Math.sin(a) * rr;
+        t ? g.lineTo(x, y) : g.moveTo(x, y);
+      }
+      g.stroke();
+    }
+    polygon(g, r * .24, 3, Math.PI / 2, p.glow, 2.5, .85);
+  }
+  g.restore();
+}
+
+function draw(cv, el, tier) {
+  const g = cv.getContext("2d");
+  const p = ELEMENTS[el];
+  g.clearRect(0, 0, S, S);
+
+  // additive glow so it reads on a dark battlefield
+  g.globalCompositeOperation = "lighter";
+  const grad = g.createRadialGradient(C, C, 0, C, C, S * .48);
+  grad.addColorStop(0, p.deep + "55");
+  grad.addColorStop(1, "#00000000");
+  g.fillStyle = grad; g.fillRect(0, 0, S, S);
+  g.globalCompositeOperation = "source-over";
+
+  const R = 200;
+  ring(g, R, 4, p.core, .95);                       // tier 1: always
+  ticks(g, R + 6, 24, 12, 2, p.core, .55);
+
+  if (tier >= 2) {
+    ring(g, R - 34, 2.5, p.glow, .8, [10, 8]);      // tier 2: second ring + runes
+    runes(g, R - 62, 12, p.core, .75);
+  }
+  if (tier >= 3) {
+    ring(g, R - 92, 2, p.glow, .7);                 // tier 3: third ring
+    ticks(g, R - 92, 48, 7, 1.5, p.glow, .4);
+  }
+
+  core(g, el, p, R - 118);
+
+  if (tier >= 3) {                                   // orbiting mote
+    const mx = C + Math.cos(-Math.PI / 3) * (R + 6), my = C + Math.sin(-Math.PI / 3) * (R + 6);
+    const mg = g.createRadialGradient(mx, my, 0, mx, my, 26);
+    mg.addColorStop(0, p.glow); mg.addColorStop(.35, p.core + "aa"); mg.addColorStop(1, "#00000000");
+    g.fillStyle = mg; g.beginPath(); g.arc(mx, my, 26, 0, Math.PI * 2); g.fill();
+  }
+}
+
+const grid = document.getElementById("grid");
+for (const el of Object.keys(ELEMENTS)) {
+  for (const tier of [1, 2, 3]) {
+    const fig = document.createElement("figure");
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = S;
+    cv.id = `c-${el}-${tier}`;
+    fig.appendChild(cv);
+    const cap = document.createElement("figcaption");
+    cap.textContent = `${el} · T${tier}`;
+    fig.appendChild(cap);
+    grid.appendChild(fig);
+    draw(cv, el, tier);
+  }
+}
+window.__ready = true;
+</script>
+</body>
+</html>
