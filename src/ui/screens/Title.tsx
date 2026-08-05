@@ -35,11 +35,10 @@ export function Title() {
           backgroundPosition: "center",
         }}
       >
-        {/* dark scrim top and bottom, per spec, over the hero image. z-index: -1 (not the
-         * more obvious "give the content z-index: 1") so the logo's mix-blend-mode below
-         * still sees the hero image as its backdrop — a positive z-index on that content
-         * div would make it (a flex item) its own stacking context, which isolates any
-         * blend mode inside it from anything outside, including this hero background. */}
+        {/* dark scrim top and bottom, per spec, over the hero image. z-index: -1 rather
+         * than giving every content sibling z-index: 1 — this is the only element that
+         * actually needs explicit stacking (it's the one thing that must sit BEHIND
+         * normal-flow content despite being position:absolute). */}
         <div
           aria-hidden="true"
           style={{
@@ -51,34 +50,16 @@ export function Title() {
           }}
         />
         <div style={{ textAlign: "center" }}>
-          {/* Cropped straight from the mockup sheet's logo lockup (references/5F0AA11F...,
-           * bottom-right panel) rather than re-set as live text — that mockup's serif
-           * wordmark has a hand-painted gold gradient and bloom no CSS text-shadow
-           * reproduces. The crop's own dark background is close enough to the hero
-           * image's scrim that `screen` blending drops it without needing true alpha
-           * matting. Kanji + element dots stay live-rendered below (unchanged) since
-           * those already read cleanly as CSS. */}
-          <img
-            src="/art/logo-wordmark.png"
-            alt="React TD"
-            style={{
-              width: 260,
-              maxWidth: "70vw",
-              mixBlendMode: "screen",
-              // Screen-blending drops the crop's near-black background, but its
-              // background isn't quite uniform (a faint decorative mandala line from
-              // the mockup's panel bleeds through) — enough to leave a soft rectangular
-              // seam against the hero sky. Fading the mask well inside the crop's own
-              // edges removes that boundary entirely; the wordmark's glyphs sit safely
-              // within the faded-in region so nothing legible gets clipped.
-              WebkitMaskImage: "radial-gradient(ellipse 65% 55% at 50% 48%, black 55%, transparent 100%)",
-              maskImage: "radial-gradient(ellipse 65% 55% at 50% 48%, black 55%, transparent 100%)",
-            }}
-          />
-          <span className="kanji" style={{ fontSize: 12, marginTop: 8 }}>
-            リアクトTD
-          </span>
-          <span className="kanji" style={{ fontSize: 10, marginTop: 4, opacity: 0.55 }}>
+          {/* The dedicated logo lockup from references/392B53D7... (not the earlier
+           * screenshot-cropped version — that was a UI mockup with the logo incidentally
+           * in one panel; this file IS the logo, full resolution, clean edges). Background-
+           * removed via color-distance keying against its cream backdrop — see
+           * design/assets/logo/logo-wordmark-source.png for the full-res matte and the
+           * one-off script that produced it. Real alpha, so no blend-mode/mask tricks
+           * needed here. Already carries its own "リアクトTD" lockup text, so the second
+           * kanji line below is now the only live-rendered one. */}
+          <img src="/art/logo-wordmark.png" alt="React TD" style={{ width: 320, maxWidth: "80vw" }} />
+          <span className="kanji" style={{ fontSize: 10, marginTop: 8, opacity: 0.55 }}>
             魔法の塔防衛
           </span>
         </div>
