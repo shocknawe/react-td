@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>React TD — Generated Art</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .wrap{padding:48px;max-width:1140px;margin:0 auto}
+  h1{font-family:var(--display);font-size:28px;color:var(--gold-bright)}
+  .lede{color:var(--ink-2);max-width:76ch;line-height:1.65;margin:14px 0 8px}
+  .note{font-size:12px;color:var(--ink-3);max-width:76ch;line-height:1.6;margin-bottom:32px}
+  h2{font-family:var(--display);font-size:16px;color:var(--gold);margin:38px 0 6px}
+  .sub{font-size:12px;color:var(--ink-3);margin-bottom:14px;line-height:1.6;max-width:76ch}
+  code{font-family:var(--num);color:var(--gold);font-size:12px}
+
+  .title-demo{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap}
+  .phone-t{width:340px;height:736px;border:var(--hair);border-radius:18px;overflow:hidden;
+           position:relative;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+  .phone-t img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .phone-t .scrim{position:absolute;inset:0;
+      background:linear-gradient(180deg,rgba(7,10,20,.72) 0%,rgba(7,10,20,.15) 34%,rgba(7,10,20,.55) 78%,rgba(7,10,20,.95) 100%)}
+  .phone-t .stack{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+                  justify-content:space-between;padding:44px 20px 22px}
+  .logo{font-family:var(--display);font-size:42px;color:var(--gold-bright);text-align:center;
+        text-shadow:0 2px 22px rgba(0,0,0,.9),0 0 30px rgba(212,168,67,.35)}
+  .tabs{display:flex;gap:6px;width:100%;opacity:.5}
+  .tabs div{flex:1;text-align:center;font-size:9px;padding:9px 0;border:var(--hair);
+            border-radius:var(--r-sm);background:rgba(16,24,48,.75)}
+
+  .roster{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .unit{border:var(--hair);border-radius:var(--r-sm);padding:14px;text-align:center;
+        background:linear-gradient(180deg,#18321f,#122417)}
+  .unit img{width:100%;max-width:150px;display:block;margin:0 auto}
+  .unit b{display:block;font-size:12px;color:var(--ink);margin-top:8px;font-family:var(--display)}
+  .unit span{display:block;font-size:10px;color:var(--ink-3);margin-top:3px;font-family:var(--num)}
+
+  .ground{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .gt{border:var(--hair);border-radius:var(--r-sm);overflow:hidden}
+  .gt .sw{height:230px;background-size:190px 190px}
+  .gt figcaption{font-size:11px;color:var(--ink-3);padding:9px;font-family:var(--num);border-top:var(--hair)}
+
+  .scene{margin-top:16px;border:var(--hair);border-radius:var(--r-md);height:420px;position:relative;
+         overflow:hidden;background-size:200px 200px;background-image:url(assets/art/ground-valley-dark.png)}
+  .scene svg{position:absolute;inset:0;width:100%;height:100%}
+  .scene img{position:absolute;width:74px}
+  footer{border-top:var(--hair);margin-top:44px;padding-top:18px;font-size:12px;color:var(--ink-3);line-height:1.7}
+  a{color:var(--gold)}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>Generated Art<span class="kanji" style="margin-top:6px">生成アート</span></h1>
+<p class="lede">Six raster assets from <code>gpt-image-2</code> and <code>gpt-image-1</code>, filling the
+gaps procedural art could not: painterly key art and character sprites. Everything geometric — icons,
+magic circles, the path, sockets, the HUD — stays procedural, because vector stays crisp at every size
+and the path has to align with gameplay waypoints.</p>
+<p class="note">Masters are 1024px; drop-in game-size copies are in <code>assets/art/128/</code>.
+All four sprites carry a real alpha channel (verified <code>alpha_min = 0</code>), not a matte.</p>
+
+<h2>Title key art — un-cuts T26</h2>
+<p class="sub">T26 was cut in Phase 3 because compositing four cream-backed character crops over the
+mood reel needed alpha matting nobody had budgeted. A single generated key visual removes that
+problem entirely. Composition was directed to leave the upper third empty for the logo, and it
+matches the mood reel's arc: storm breaking into gold light, a path leading to a crystal spire.</p>
+<div class="title-demo">
+  <div class="phone-t">
+    <img src="assets/art/title-hero.png" alt="title key art">
+    <div class="scrim"></div>
+    <div class="stack">
+      <div>
+        <div class="logo">React<span style="color:#c8474a"> TD</span></div>
+        <span class="kanji" style="text-align:center;font-size:11px;margin-top:6px">リアクトTD</span>
+      </div>
+      <button class="btn btn-primary btn-lg">START</button>
+      <div class="tabs"><div>SHOP</div><div>SUMMON</div><div>MISSIONS</div><div>MENU</div></div>
+    </div>
+  </div>
+  <div style="flex:1;min-width:330px">
+    <p class="sub">The dark scrim top and bottom is doing real work: it holds the logo and the tab row
+      at contrast without dimming the illustration's midtones, where the characters live. Without it
+      the gold logo sits on bright sky and disappears.</p>
+    <p class="sub">All four characters read against their sheet palettes — crimson, cobalt, gold and
+      white, green. The staff, the cape trim and the filigree carry over from the character sheets,
+      which is what makes this look like the same production rather than stock fantasy art.</p>
+  </div>
+</div>
+
+<h2>Enemy roster — the gap that had no assets at all</h2>
+<p class="sub">The plan settled on "flat cloaked silhouettes with an element-tinted rim light" purely
+because no enemy art existed. These replace that fallback. Silhouettes are deliberately distinct at
+gameplay size — draped, blocky-with-shield, spindly, and the boss reading wider and taller than
+anything else on the field.</p>
+<div class="roster">
+  <div class="unit"><img src="assets/art/enemy-shade.png" alt=""><b>Shade</b><span>basic · fast-ish</span></div>
+  <div class="unit"><img src="assets/art/enemy-armored.png" alt=""><b>Revenant</b><span>armoured · slow</span></div>
+  <div class="unit"><img src="assets/art/enemy-scout.png" alt=""><b>Scout Imp</b><span>fast · fragile</span></div>
+  <div class="unit"><img src="assets/art/enemy-boss.png" alt=""><b>Warlord</b><span>boss</span></div>
+</div>
+
+<h2>Ground texture — fixes the "noise reads as mud" problem</h2>
+<p class="sub">Phase 3 #18 rejected a noise-tinted ground: noise reads as texture at 2000px and as dirt
+at 360px. A painted tile solves it without touching the path, which stays procedural so it keeps
+matching the waypoint spline. Measured edge mismatch is <code>6.5/255</code>, so it tiles cleanly.
+The raw generation was too bright and saturated for the battlefield palette, so the dark variant is
+the one to ship.</p>
+<div class="ground">
+  <figure class="gt"><div class="sw" style="background-image:url(assets/art/ground-valley.png)"></div>
+    <figcaption>ground-valley.png — as generated, too bright</figcaption></figure>
+  <figure class="gt"><div class="sw" style="background-image:url(assets/art/ground-valley-dark.png)"></div>
+    <figcaption>ground-valley-dark.png — shipped</figcaption></figure>
+</div>
+
+<h2>Assembled — generated art under procedural geometry</h2>
+<p class="sub">Painted ground, real sprites, and a procedural path with a gold inner rule and a magic
+circle decal. This is the actual division of labour the plan now calls for.</p>
+<div class="scene">
+  <svg viewBox="0 0 900 420" preserveAspectRatio="none">
+    <path id="p" d="M-20 90 C220 90 240 320 480 320 C700 320 720 130 940 130" fill="none"
+          stroke="#c9b083" stroke-width="52" stroke-linecap="round" opacity=".92"/>
+    <use href="#p" stroke="#e6d4ad" stroke-width="46" fill="none"/>
+    <use href="#p" stroke="#8a6d2b" stroke-width="2" fill="none" opacity=".6"/>
+  </svg>
+  <img src="assets/art/128/enemy-shade.png"   style="left:120px;top:44px">
+  <img src="assets/art/128/enemy-scout.png"   style="left:300px;top:196px">
+  <img src="assets/art/128/enemy-armored.png" style="left:520px;top:272px">
+  <img src="assets/art/128/enemy-boss.png"    style="left:700px;top:44px;width:120px">
+  <img src="assets/circles/128/fire-3.png"    style="left:392px;top:56px;width:118px">
+  <img src="assets/circles/128/ice-1.png"     style="left:640px;top:250px;width:104px">
+</div>
+
+<footer>Generated with the OpenAI images API · masters in <code>design/assets/art/</code> ·
+<a href="scene.html"><b>live battlefield</b></a> · <a href="index.html">design board</a> · <a href="circles.html">magic circles</a> ·
+<a href="icons.html">icons</a> · <a href="atlas.html">expression atlas</a></footer>
+</div></body></html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>render/ harness</title>
+<style>
+  body { background:#0b1410; color:#e7e0cf; font:13px system-ui, sans-serif; margin:0; padding:24px; }
+  .stage { width: 350px; height: 600px; margin: 0 auto; border: 1px solid #2a3a30; position: relative; overflow: hidden; }
+  canvas { display: block; }
+  .ctl { display:flex; gap:8px; justify-content:center; margin-top:12px; }
+  button { font-size:12px; padding:6px 10px; background:#131a15; color:#e7e0cf; border:1px solid #2a3a30; cursor:pointer; }
+  button.on { border-color:#f0c64a; color:#f0c64a; }
+  p { max-width: 460px; margin: 12px auto; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <p>Standalone <code>render/</code> harness — no game/, state/ or ui/ dependency. Draws a
+  hand-built fake SimState on a loop so every draw path (ground fill + fallback, path,
+  sockets, tower decals x element x tier with vector fallback, tower + enemy sprites with
+  vector fallback, HP bar, ice-slow ring, interpolated enemy motion, projectile trails,
+  small/big/kill impact bursts, screenshake, damage numbers, and the 3-segment leak ring)
+  is exercised.</p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+  </div>
+  <div class="ctl">
+    <button id="reduced">reduced motion: off</button>
+    <button id="leak">cycle leaks (0)</button>
+  </div>
+  <script type="module" src="./__harness.ts"></script>
+</body>
+</html>

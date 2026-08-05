@@ -1,0 +1,72 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<title>React TD — Magic Circles</title><link rel="stylesheet" href="tokens.css">
+<style>
+ .wrap{padding:48px;max-width:1080px;margin:0 auto}
+ h1{font-family:var(--display);font-size:28px;color:var(--gold-bright)}
+ .lede{color:var(--ink-2);max-width:74ch;line-height:1.65;margin:14px 0 10px}
+ .note{font-size:12px;color:var(--ink-3);max-width:74ch;line-height:1.6;margin-bottom:28px}
+ h2{font-family:var(--display);font-size:15px;color:var(--gold);margin:30px 0 12px;display:flex;align-items:center;gap:9px}
+ .dot{width:16px;height:16px;border-radius:50%;background:var(--el);border:1px solid var(--gold)}
+ .row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+ .cell{border:var(--hair);border-radius:var(--r-sm);background:#0d1424;padding:12px;text-align:center}
+ .cell img{width:100%;max-width:190px;display:block;margin:0 auto}
+ .cell span{display:block;font-size:10px;color:var(--ink-3);margin-top:8px;font-family:var(--num)}
+ .field{margin-top:44px;border:var(--hair);border-radius:var(--r-md);padding:24px;
+        background:linear-gradient(180deg,#18321f,#122417)}
+ .field h2{margin-top:0}
+ .onfield{display:flex;gap:26px;align-items:flex-end;justify-content:center;flex-wrap:wrap}
+ .tower{position:relative;width:120px;height:120px}
+ .tower img{position:absolute;inset:0;width:100%;height:100%}
+ .tower .body{position:absolute;left:50%;top:26px;transform:translateX(-50%);width:26px;height:44px;
+              background:#1d2a4d;border:1.5px solid var(--gold)}
+ .tower .roof{position:absolute;left:50%;top:12px;transform:translateX(-50%);width:0;height:0;
+              border-left:15px solid transparent;border-right:15px solid transparent;border-bottom:16px solid var(--el)}
+ .cap{text-align:center;font-size:11px;color:var(--ink-2);margin-top:8px;font-family:var(--num)}
+ footer{border-top:var(--hair);margin-top:40px;padding-top:18px;font-size:12px;color:var(--ink-3);line-height:1.7}
+ a{color:var(--gold)} code{font-family:var(--num);color:var(--gold)}
+</style></head><body><div class="wrap">
+<h1>Element Magic Circles<span class="kanji" style="margin-top:6px">魔法陣</span></h1>
+<p class="lede">Generated procedurally on canvas, exported as 12 transparent PNGs. No diffusion model
+was involved — this is drawn in code, which is what tasks T16 and T20 call for anyway. Tier is
+carried by ring count, so a tier-3 tower is legible from the battlefield without reading a label.</p>
+<p class="note">Each element is a distinct <em>shape</em>, not just a distinct hue: petals, hexagonal
+lattice, zigzag spokes, spiral. That keeps them tellable apart in greyscale, which is the same a11y
+rule the icon set follows (T9). Source: <code>design/gen/circles.html</code> ·
+512px masters in <code>design/assets/circles/</code> · 128px game-size in <code>.../128/</code>
+(8% of the master size; the 512s are reference only).</p>
+<h2 class="el-fire"><span class="dot"></span>fire</h2><div class="row">
+<div class="cell"><img src="assets/circles/fire-1.png" alt="fire tier 1"><span>fire-1 · 512px</span></div>
+<div class="cell"><img src="assets/circles/fire-2.png" alt="fire tier 2"><span>fire-2 · 512px</span></div>
+<div class="cell"><img src="assets/circles/fire-3.png" alt="fire tier 3"><span>fire-3 · 512px</span></div>
+</div>
+<h2 class="el-ice"><span class="dot"></span>ice</h2><div class="row">
+<div class="cell"><img src="assets/circles/ice-1.png" alt="ice tier 1"><span>ice-1 · 512px</span></div>
+<div class="cell"><img src="assets/circles/ice-2.png" alt="ice tier 2"><span>ice-2 · 512px</span></div>
+<div class="cell"><img src="assets/circles/ice-3.png" alt="ice tier 3"><span>ice-3 · 512px</span></div>
+</div>
+<h2 class="el-lightning"><span class="dot"></span>lightning</h2><div class="row">
+<div class="cell"><img src="assets/circles/lightning-1.png" alt="lightning tier 1"><span>lightning-1 · 512px</span></div>
+<div class="cell"><img src="assets/circles/lightning-2.png" alt="lightning tier 2"><span>lightning-2 · 512px</span></div>
+<div class="cell"><img src="assets/circles/lightning-3.png" alt="lightning tier 3"><span>lightning-3 · 512px</span></div>
+</div>
+<h2 class="el-wind"><span class="dot"></span>wind</h2><div class="row">
+<div class="cell"><img src="assets/circles/wind-1.png" alt="wind tier 1"><span>wind-1 · 512px</span></div>
+<div class="cell"><img src="assets/circles/wind-2.png" alt="wind tier 2"><span>wind-2 · 512px</span></div>
+<div class="cell"><img src="assets/circles/wind-3.png" alt="wind tier 3"><span>wind-3 · 512px</span></div>
+</div>
+<div class="field">
+  <h2 style="color:var(--gold-bright)">On the battlefield — 120px, the real size</h2>
+  <div class="onfield">
+<div><div class="tower el-fire"><img src="assets/circles/128/fire-1.png" alt=""><div class="body"></div><div class="roof"></div></div><div class="cap">fire T1</div></div>
+<div><div class="tower el-fire"><img src="assets/circles/128/fire-3.png" alt=""><div class="body"></div><div class="roof"></div></div><div class="cap">fire T3</div></div>
+<div><div class="tower el-ice"><img src="assets/circles/128/ice-1.png" alt=""><div class="body"></div><div class="roof"></div></div><div class="cap">ice T1</div></div>
+<div><div class="tower el-ice"><img src="assets/circles/128/ice-3.png" alt=""><div class="body"></div><div class="roof"></div></div><div class="cap">ice T3</div></div>
+<div><div class="tower el-lightning"><img src="assets/circles/128/lightning-1.png" alt=""><div class="body"></div><div class="roof"></div></div><div class="cap">lightning T1</div></div>
+<div><div class="tower el-lightning"><img src="assets/circles/128/lightning-3.png" alt=""><div class="body"></div><div class="roof"></div></div><div class="cap">lightning T3</div></div>
+<div><div class="tower el-wind"><img src="assets/circles/128/wind-1.png" alt=""><div class="body"></div><div class="roof"></div></div><div class="cap">wind T1</div></div>
+<div><div class="tower el-wind"><img src="assets/circles/128/wind-3.png" alt=""><div class="body"></div><div class="roof"></div></div><div class="cap">wind T3</div></div>
+  </div>
+</div>
+<footer>Task T20 · generated by the /autoplan follow-up ·
+<a href="scene.html"><b>live battlefield</b></a> · <a href="index.html">design board</a> · <a href="icons.html">icon sprite</a> · <a href="atlas.html">expression atlas</a></footer>
+</div></body></html>

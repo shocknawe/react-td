@@ -1,0 +1,12 @@
+{
+  "_note": "Expression tile coordinate map. Source sheets are 1536x1024. Grid is 3 cols x 2 rows in the EXPRESSIONS panel, upper-right of each character sheet. Verified visually across all four sheets.",
+  "tile": { "w": 181, "h": 210 },
+  "grid": { "originX": 926, "originY": 61, "strideX": 193, "strideY": 222, "cols": 3, "rows": 2 },
+  "order": ["neutral", "happy", "profile", "worried", "shout", "calm"],
+  "characters": {
+    "hikari": { "element": "fire",      "sheet": "references/F5FFD8B2-B8AE-4838-8D04-280A4F40053B.PNG" },
+    "aoi":    { "element": "ice",       "sheet": "references/DFB97948-95DB-4090-AC50-2F54CEC3C9DF.PNG" },
+    "kai":    { "element": "lightning", "sheet": "references/53FDC3D3-EE72-4E09-BF60-6661C064E32C.PNG" },
+    "takumi": { "element": "wind",      "sheet": "references/9BDD8D35-88BF-40FF-B748-A011F0332CD5.PNG" }
+  }
+}

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>React TD — Live Battlefield</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .wrap{padding:44px;max-width:1080px;margin:0 auto}
+  h1{font-family:var(--display);font-size:28px;color:var(--gold-bright)}
+  .lede{color:var(--ink-2);max-width:76ch;line-height:1.65;margin:14px 0 8px}
+  .note{font-size:12px;color:var(--ink-3);max-width:76ch;line-height:1.6;margin-bottom:24px}
+  code{font-family:var(--num);color:var(--gold);font-size:12px}
+  .stage{border:var(--hair);border-radius:var(--r-md);overflow:hidden;position:relative;
+         width:375px;margin:0 auto;background:#0b1410}
+  canvas{display:block;width:375px;height:600px}
+  .hud{position:absolute;top:0;left:0;right:0;display:flex;gap:8px;align-items:center;
+       padding:8px 12px;background:rgba(7,10,20,.82);border-bottom:var(--hair);font-size:12px;color:var(--ink-2)}
+  .hud .num{color:var(--ink);font-family:var(--num)}
+  .ctl{display:flex;gap:8px;justify-content:center;margin-top:16px}
+  .ctl button{font-size:12px;padding:8px 14px;min-height:0}
+  .ctl button.on{border-color:var(--gold-bright);color:var(--gold-bright)}
+  .stats{margin-top:14px;text-align:center;font-size:11px;color:var(--ink-3);font-family:var(--num)}
+  footer{border-top:var(--hair);margin-top:36px;padding-top:18px;font-size:12px;color:var(--ink-3);line-height:1.7}
+  a{color:var(--gold)}
+</style>
+</head>
+<body><div class="wrap">
+<h1>Live Battlefield<span class="kanji" style="margin-top:6px">戦場</span></h1>
+<p class="lede">Everything assembled and moving: painted ground, generated tower and enemy sprites,
+procedural path, magic-circle decals, projectiles, impact bursts, damage numbers and the crystal
+leak ring. This is the T16 render layer as a working reference, not a mockup.</p>
+<p class="note">It also implements the <b>T31</b> loop exactly as specified — fixed 16.67ms steps, a
+250ms <code>rawDt</code> clamp, a step budget that scales with speed so fast-forward does not
+degrade into slow motion, and render interpolation via <code>alpha = acc / DT</code>. Change speed
+and watch the step counter: it tracks <code>speed × elapsed × 60</code>, and the <code>dt</code>
+handed to <code>step()</code> never changes.</p>
+
+<div class="stage">
+  <canvas id="cv" width="750" height="1200"></canvas>
+  <div class="hud">
+    <span>WAVE <span class="num" id="h-wave">1</span></span>
+    <span>☠ <span class="num" id="h-kills">0</span></span>
+    <span style="flex:1"></span>
+    <span class="num" id="h-speed">×1</span>
+  </div>
+</div>
+<div class="ctl">
+  <button class="btn on" data-s="1">×1</button>
+  <button class="btn" data-s="1.5">×1.5</button>
+  <button class="btn" data-s="2">×2</button>
+  <button class="btn" data-s="4">×4 hold</button>
+  <button class="btn" id="pause">❙❙ pause</button>
+</div>
+<div class="stats" id="stats">…</div>
+
+<footer><a href="art.html">generated art</a> · <a href="circles.html">magic circles</a> ·
+<a href="index.html">design board</a></footer>
+</div>
+
+<script>
+const cv = document.getElementById("cv"), g = cv.getContext("2d");
+const W = 750, H = 1200;                       // 2x backing store for DPR crispness
+const EL = {
+  fire:      {c:"#e05a3a", glow:"#ff8a5c"},
+  ice:       {c:"#2f6fd0", glow:"#7fb4ee"},
+  lightning: {c:"#f0c64a", glow:"#fff0b8"},
+  wind:      {c:"#4e9c63", glow:"#a8d8a0"},
+};
+
+// ---- assets -------------------------------------------------------------
+const IMG = {};
+const need = ["ground-valley-dark","enemy-shade","enemy-armored","enemy-scout","enemy-boss",
+              "tower-fire","tower-ice","tower-lightning","tower-wind"];
+let loaded = 0;
+need.forEach(n => {
+  const i = new Image();
+  i.onload = i.onerror = () => { if (++loaded === need.length) start(); };
+  i.src = `assets/art/${n}.png`;
+  IMG[n] = i;
+});
+const CIRC = {};
+for (const e of Object.keys(EL)) {
+  const i = new Image(); i.src = `assets/circles/128/${e}-3.png`; CIRC[e] = i;
+}
+
+// ---- path ---------------------------------------------------------------
+const WP = [[-40,120],[250,120],[250,380],[110,380],[110,660],[520,660],[520,900],[300,900],[300,1240]];
+const SEG = [], LEN = [];
+let TOTAL = 0;
+for (let i=0;i<WP.length-1;i++){
+  const dx=WP[i+1][0]-WP[i][0], dy=WP[i+1][1]-WP[i][1];
+  const l=Math.hypot(dx,dy); SEG.push({x:WP[i][0],y:WP[i][1],dx:dx/l,dy:dy/l,l}); LEN.push(TOTAL); TOTAL+=l;
+}
+function at(d){
+  for(let i=SEG.length-1;i>=0;i--){ if(d>=LEN[i]){ const s=SEG[i], t=Math.min(d-LEN[i],s.l);
+    return {x:s.x+s.dx*t, y:s.y+s.dy*t}; } }
+  return {x:SEG[0].x,y:SEG[0].y};
+}
+
+// ---- sim state (pure-ish: no DOM reads inside step) ----------------------
+const TOWERS = [
+  {x:340,y:240, el:"fire",      cd:0, rate:.55, rng:210},
+  {x:200,y:520, el:"ice",       cd:0, rate:.85, rng:200},
+  {x:420,y:560, el:"lightning", cd:0, rate:.40, rng:230},
+  {x:600,y:800, el:"wind",      cd:0, rate:.70, rng:190},
+];
+const TYPES = {
+  shade:   {img:"enemy-shade",   hp:60,  spd:52, s:74},
+  armored: {img:"enemy-armored", hp:150, spd:34, s:80},
+  scout:   {img:"enemy-scout",   hp:38,  spd:88, s:68},
+  boss:    {img:"enemy-boss",    hp:600, spd:26, s:120},
+};
+let enemies=[], shots=[], bursts=[], nums=[];
+let spawnT=0, waveN=1, kills=0, leaks=0, seed=12345, spawned=0;
+function rnd(){ seed=(seed*1664525+1013904223)>>>0; return seed/4294967296; }  // seeded, deterministic
+
+function step(dt){
+  // spawn
+  spawnT-=dt;
+  if(spawnT<=0 && spawned<12){
+    const r=rnd();
+    const k = spawned===11 ? "boss" : r<.5?"shade":r<.8?"scout":"armored";
+    const t=TYPES[k];
+    enemies.push({d:0,hp:t.hp,max:t.hp,k,slow:0});
+    spawned++; spawnT = k==="boss"?2.2:.85;
+  }
+  if(spawned>=12 && enemies.length===0){ spawned=0; waveN++; spawnT=1.2; }
+
+  // enemies
+  for(const e of enemies){
+    const t=TYPES[e.k];
+    const mul = e.slow>0 ? .45 : 1;
+    if(e.slow>0) e.slow-=dt;
+    e.d += t.spd*mul*dt;
+    if(e.d>=TOTAL){ e.dead=true; leaks++; }
+  }
+
+  // towers fire
+  for(const tw of TOWERS){
+    tw.cd-=dt;
+    if(tw.cd>0) continue;
+    let best=null, bd=1e9;
+    for(const e of enemies){
+      if(e.dead) continue;
+      const p=at(e.d), dd=Math.hypot(p.x-tw.x,p.y-tw.y);
+      if(dd<=tw.rng && e.d>bd*0 && dd<bd){ bd=dd; best=e; }
+    }
+    if(best){
+      const p=at(best.d);
+      shots.push({x:tw.x,y:tw.y-52,px:tw.x,py:tw.y-52,tx:p.x,ty:p.y,el:tw.el,t:0,tgt:best,trail:[]});
+      tw.cd=tw.rate;
+    }
+  }
+
+  // projectiles
+  for(const s of shots){
+    s.t+=dt*3.1;
+    s.px=s.x; s.py=s.y;
+    if(s.tgt && !s.tgt.dead){ const p=at(s.tgt.d); s.tx=p.x; s.ty=p.y; }
+    const k=Math.min(s.t,1);
+    s.x = s.x+(s.tx-s.x)*Math.min(1,dt*9);
+    s.y = s.y+(s.ty-s.y)*Math.min(1,dt*9);
+    s.trail.push({x:s.x,y:s.y}); if(s.trail.length>7) s.trail.shift();
+    if(Math.hypot(s.tx-s.x,s.ty-s.y)<14 || s.t>2.4){
+      s.hit=true;
+      bursts.push({x:s.x,y:s.y,el:s.el,t:0});
+      if(s.tgt && !s.tgt.dead){
+        const dmg = 22+Math.floor(rnd()*16);
+        s.tgt.hp-=dmg;
+        if(s.el==="ice") s.tgt.slow=1.1;
+        nums.push({x:s.x,y:s.y,v:dmg,el:s.el,t:0});
+        if(s.tgt.hp<=0){ s.tgt.dead=true; kills++; bursts.push({x:s.x,y:s.y,el:s.el,t:0,big:true}); }
+      }
+    }
+  }
+  for(const b of bursts) b.t+=dt;
+  for(const n of nums){ n.t+=dt; n.y-=34*dt; }
+
+  enemies=enemies.filter(e=>!e.dead);
+  shots=shots.filter(s=>!s.hit);
+  bursts=bursts.filter(b=>b.t<.45);
+  nums=nums.filter(n=>n.t<.9);
+}
+
+// ---- render -------------------------------------------------------------
+function drawPath(){
+  g.lineJoin=g.lineCap="round";
+  g.strokeStyle="#c9b083"; g.lineWidth=64; stroke();
+  g.strokeStyle="#e6d4ad"; g.lineWidth=56; stroke();
+  g.strokeStyle="rgba(138,109,43,.55)"; g.lineWidth=2; stroke();
+  function stroke(){ g.beginPath(); g.moveTo(WP[0][0],WP[0][1]);
+    for(let i=1;i<WP.length;i++) g.lineTo(WP[i][0],WP[i][1]); g.stroke(); }
+}
+function render(alpha){
+  // ground
+  const gp=IMG["ground-valley-dark"];
+  if(gp.naturalWidth){ const p=g.createPattern(gp,"repeat"); g.fillStyle=p;
+    g.save(); g.scale(.42,.42); g.fillRect(0,0,W/.42,H/.42); g.restore(); }
+  else { g.fillStyle="#152a1c"; g.fillRect(0,0,W,H); }
+  drawPath();
+
+  // decals + towers
+  for(const tw of TOWERS){
+    const c=CIRC[tw.el];
+    if(c.naturalWidth) g.drawImage(c,tw.x-90,tw.y-90,180,180);
+    const im=IMG["tower-"+tw.el];
+    if(im.naturalWidth) g.drawImage(im,tw.x-70,tw.y-118,140,140);
+  }
+
+  // enemies (interpolated)
+  for(const e of enemies){
+    const t=TYPES[e.k], p=at(e.d + t.spd*(e.slow>0?.45:1)*alpha*DT);
+    const im=IMG[t.img];
+    if(im.naturalWidth) g.drawImage(im,p.x-t.s/2,p.y-t.s/2-10,t.s,t.s);
+    if(e.hp<e.max){
+      const w=t.s*.62;
+      g.fillStyle="rgba(7,10,20,.75)"; g.fillRect(p.x-w/2,p.y-t.s/2-22,w,6);
+      g.fillStyle= e.hp/e.max>.4?"#4e9c63":"#e0443c";
+      g.fillRect(p.x-w/2,p.y-t.s/2-22,w*(e.hp/e.max),6);
+    }
+    if(e.slow>0){ g.strokeStyle="rgba(127,180,238,.85)"; g.lineWidth=2;
+      g.beginPath(); g.arc(p.x,p.y,t.s*.44,0,7); g.stroke(); }
+  }
+
+  // projectiles — additive glow + trail
+  g.globalCompositeOperation="lighter";
+  for(const s of shots){
+    const c=EL[s.el];
+    for(let i=0;i<s.trail.length;i++){
+      const q=s.trail[i], a=(i+1)/s.trail.length;
+      g.fillStyle=c.c; g.globalAlpha=a*.32;
+      g.beginPath(); g.arc(q.x,q.y,3+a*5,0,7); g.fill();
+    }
+    g.globalAlpha=1;
+    const rg=g.createRadialGradient(s.x,s.y,0,s.x,s.y,20);
+    rg.addColorStop(0,c.glow); rg.addColorStop(.4,c.c); rg.addColorStop(1,"rgba(0,0,0,0)");
+    g.fillStyle=rg; g.beginPath(); g.arc(s.x,s.y,20,0,7); g.fill();
+  }
+  // impact bursts — expanding ring + spokes
+  for(const b of bursts){
+    const c=EL[b.el], k=b.t/.45, r=(b.big?70:40)*k;
+    g.globalAlpha=(1-k)*.95;
+    g.strokeStyle=c.glow; g.lineWidth=(b.big?5:3)*(1-k);
+    g.beginPath(); g.arc(b.x,b.y,r,0,7); g.stroke();
+    const n=b.big?10:6;
+    for(let i=0;i<n;i++){ const a=(i/n)*7 + (b.big?.3:0);
+      g.beginPath();
+      g.moveTo(b.x+Math.cos(a)*r*.55, b.y+Math.sin(a)*r*.55);
+      g.lineTo(b.x+Math.cos(a)*r*1.15, b.y+Math.sin(a)*r*1.15); g.stroke(); }
+  }
+  g.globalAlpha=1; g.globalCompositeOperation="source-over";
+
+  // damage numbers
+  g.font="600 26px ui-monospace, monospace"; g.textAlign="center";
+  for(const n of nums){
+    const a=1-n.t/.9;
+    g.globalAlpha=a; g.lineWidth=5; g.strokeStyle="rgba(7,10,20,.9)";
+    g.strokeText(n.v,n.x,n.y); g.fillStyle=EL[n.el].glow; g.fillText(n.v,n.x,n.y);
+  }
+  g.globalAlpha=1;
+
+  // crystal + 3-segment leak ring
+  const cx=300, cy=1150;
+  const rg=g.createRadialGradient(cx,cy,0,cx,cy,110);
+  rg.addColorStop(0,"rgba(159,216,255,.5)"); rg.addColorStop(1,"rgba(159,216,255,0)");
+  g.fillStyle=rg; g.beginPath(); g.arc(cx,cy,110,0,7); g.fill();
+  g.beginPath(); g.moveTo(cx,cy-62); g.lineTo(cx+30,cy-22); g.lineTo(cx+18,cy+34);
+  g.lineTo(cx-18,cy+34); g.lineTo(cx-30,cy-22); g.closePath();
+  const cg=g.createLinearGradient(cx,cy-62,cx,cy+34);
+  cg.addColorStop(0,"#eaf6ff"); cg.addColorStop(1,"#3f7fc4");
+  g.fillStyle=cg; g.fill(); g.strokeStyle="#cfe9ff"; g.lineWidth=2; g.stroke();
+  const segs=[[-2.5,-1.75],[-1.6,-0.5],[-0.4,0.65]];
+  g.lineWidth=11; g.lineCap="round";
+  segs.forEach(([a0,a1],i)=>{ g.strokeStyle = i<3-leaks ? "#4e9c63" : "rgba(224,68,60,.3)";
+    g.beginPath(); g.arc(cx,cy,80,a0,a1); g.stroke(); });
+}
+
+// ---- T31 loop -----------------------------------------------------------
+const DT = 1/60;
+let acc=0, last=0, speed=1, paused=false, steps=0, elapsed=0;
+function frame(ts){
+  if(!last) last=ts;
+  const rawMs = ts-last; last=ts;
+  if(!paused){
+    acc += Math.min(rawMs,250)/1000 * speed;       // 250ms clamp on the RAW dt
+    elapsed += Math.min(rawMs,250)/1000;
+    let n=0; const budget = Math.ceil(speed)*4;    // budget scales with speed (fixes MAX_STEPS=5)
+    while(acc>=DT){ step(DT); acc-=DT; steps++;
+      if(++n>=budget){ acc=0; break; } }
+  }
+  render(acc/DT);                                  // interpolation alpha
+  document.getElementById("h-wave").textContent=waveN;
+  document.getElementById("h-kills").textContent=kills;
+  const want = Math.round(speed*elapsed*60);
+  document.getElementById("stats").textContent =
+    `steps ${steps} · expected ${want} · drift ${steps-want} · entities ${enemies.length+shots.length}`;
+  requestAnimationFrame(frame);
+}
+function start(){ requestAnimationFrame(frame); }
+
+document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("[data-s]").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); speed=parseFloat(b.dataset.s);
+  document.getElementById("h-speed").textContent="×"+speed;
+  steps=0; elapsed=0;                              // reset the drift counter on change
+});
+document.getElementById("pause").onclick=e=>{ paused=!paused;
+  e.target.classList.toggle("on",paused); e.target.textContent = paused?"▶ resume":"❙❙ pause"; };
+document.addEventListener("visibilitychange",()=>{ if(document.hidden){ paused=true;
+  const b=document.getElementById("pause"); b.classList.add("on"); b.textContent="▶ resume"; } });
+</script>
+</body></html>
