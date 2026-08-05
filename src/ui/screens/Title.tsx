@@ -35,23 +35,46 @@ export function Title() {
           backgroundPosition: "center",
         }}
       >
-        {/* dark scrim top and bottom, per spec, over the hero image */}
+        {/* dark scrim top and bottom, per spec, over the hero image. z-index: -1 (not the
+         * more obvious "give the content z-index: 1") so the logo's mix-blend-mode below
+         * still sees the hero image as its backdrop — a positive z-index on that content
+         * div would make it (a flex item) its own stacking context, which isolates any
+         * blend mode inside it from anything outside, including this hero background. */}
         <div
           aria-hidden="true"
           style={{
             position: "absolute",
             inset: 0,
+            zIndex: -1,
             background:
               "linear-gradient(180deg, rgba(7,10,20,.75) 0%, transparent 30%, transparent 65%, rgba(7,10,20,.85) 100%)",
           }}
         />
-        <div style={{ textAlign: "center", zIndex: 1 }}>
-          <div
-            className="label-en"
-            style={{ fontSize: 46, color: "var(--gold-bright)", textShadow: "0 2px 18px rgba(212,168,67,.5)" }}
-          >
-            React<span style={{ color: "#c8474a" }}> TD</span>
-          </div>
+        <div style={{ textAlign: "center" }}>
+          {/* Cropped straight from the mockup sheet's logo lockup (references/5F0AA11F...,
+           * bottom-right panel) rather than re-set as live text — that mockup's serif
+           * wordmark has a hand-painted gold gradient and bloom no CSS text-shadow
+           * reproduces. The crop's own dark background is close enough to the hero
+           * image's scrim that `screen` blending drops it without needing true alpha
+           * matting. Kanji + element dots stay live-rendered below (unchanged) since
+           * those already read cleanly as CSS. */}
+          <img
+            src="/art/logo-wordmark.png"
+            alt="React TD"
+            style={{
+              width: 260,
+              maxWidth: "70vw",
+              mixBlendMode: "screen",
+              // Screen-blending drops the crop's near-black background, but its
+              // background isn't quite uniform (a faint decorative mandala line from
+              // the mockup's panel bleeds through) — enough to leave a soft rectangular
+              // seam against the hero sky. Fading the mask well inside the crop's own
+              // edges removes that boundary entirely; the wordmark's glyphs sit safely
+              // within the faded-in region so nothing legible gets clipped.
+              WebkitMaskImage: "radial-gradient(ellipse 65% 55% at 50% 48%, black 55%, transparent 100%)",
+              maskImage: "radial-gradient(ellipse 65% 55% at 50% 48%, black 55%, transparent 100%)",
+            }}
+          />
           <span className="kanji" style={{ fontSize: 12, marginTop: 8 }}>
             リアクトTD
           </span>
@@ -59,7 +82,7 @@ export function Title() {
             魔法の塔防衛
           </span>
         </div>
-        <div style={{ display: "flex", gap: 6, marginTop: 26, zIndex: 1 }} aria-hidden="true">
+        <div style={{ display: "flex", gap: 6, marginTop: 26 }} aria-hidden="true">
           {ELEMENT_ORDER.map((el) => (
             <span
               key={el}
@@ -76,7 +99,7 @@ export function Title() {
         <button
           type="button"
           className="btn btn-primary btn-lg"
-          style={{ marginTop: 40, zIndex: 1 }}
+          style={{ marginTop: 40 }}
           onClick={() => goTo("stageSelect")}
           autoFocus
         >
