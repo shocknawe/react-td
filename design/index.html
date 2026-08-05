@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>React TD — Design References</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .board { padding: 48px; max-width: 1800px; margin: 0 auto; }
+  .board h1 { font-family: var(--display); font-size: 34px; letter-spacing: .04em; color: var(--gold-bright); }
+  .board h1 .kanji { font-size: 13px; margin-top: 6px; }
+  .board > p.lede { color: var(--ink-2); max-width: 70ch; margin: 16px 0 8px; line-height: 1.6; }
+  .board > p.warn { color: var(--gold); max-width: 70ch; margin: 8px 0 40px; line-height: 1.6; font-size: 13px; }
+  .row { display: flex; flex-wrap: wrap; gap: 40px; margin-bottom: 56px; }
+  .item { width: 375px; }
+  .item > h2 { font-family: var(--display); font-size: 15px; color: var(--gold); margin-bottom: 4px; letter-spacing: .06em; }
+  .item > .note { font-size: 12px; color: var(--ink-3); margin-bottom: 12px; line-height: 1.5; min-height: 48px; }
+
+  /* ===== shared screen furniture ===== */
+  .topbar { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s3);
+            background: rgba(7,10,20,.82); border-bottom: var(--hair); backdrop-filter: blur(2px); }
+  .hud-pill { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); }
+  .hud-pill .num { color: var(--ink); font-size: 13px; }
+  .spacer { flex: 1; }
+  .icon-btn { width: 30px; height: 30px; border: var(--hair); border-radius: var(--r-sm);
+              background: var(--panel); color: var(--gold); display: grid; place-items: center; font-size: 13px; }
+
+  .field { flex: 1; position: relative; background: #101c14; overflow: hidden; }
+  .field svg { display: block; width: 100%; height: 100%; }
+
+  .bottom { background: linear-gradient(180deg, rgba(16,24,48,.96), var(--bg));
+            border-top: var(--hair); padding: var(--s3) var(--s3) var(--s4); }
+
+  /* mana bar — NOTE: in the real build this lives on the CANVAS, not in React (Phase 3 #8) */
+  .mana { height: 12px; border: var(--hair); border-radius: 2px; background: #0a1024;
+          display: flex; gap: 2px; padding: 2px; margin-bottom: var(--s3); position: relative; }
+  .mana i { flex: 1; background: #16224a; border-radius: 1px; }
+  .mana i.on { background: linear-gradient(180deg, var(--gold-bright), var(--gold)); }
+  .mana .val { position: absolute; right: 4px; top: -18px; font-size: 11px; color: var(--gold); }
+
+  .rail { display: flex; gap: var(--s2); }
+  .card { flex: 1; border: var(--hair); border-radius: var(--r-sm); background: var(--panel);
+          overflow: hidden; position: relative; padding-bottom: 16px; }
+  .card img { width: 100%; display: block; aspect-ratio: 181/210; object-fit: cover; object-position: top center; }
+  .card .cost { position: absolute; bottom: 0; left: 0; right: 0; text-align: center; font-size: 11px;
+                background: rgba(7,10,20,.9); color: var(--gold-bright); font-family: var(--num); }
+  .card .badge { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%;
+                 background: var(--el); border: 1px solid var(--gold); }
+  /* four states, per Phase 2 F4 */
+  .card.is-affordable  { border-color: var(--gold); }
+  .card.is-unaffordable { filter: grayscale(.85) brightness(.6); border-color: #2a3352; }
+  .card.is-unaffordable .cost { color: var(--danger); }
+  .card.is-selected { border: 2px solid var(--gold-bright); transform: translateY(-4px);
+                      box-shadow: 0 6px 18px rgba(212,168,67,.35); }
+  .card.is-cooldown::after { content: ""; position: absolute; inset: 0; background: rgba(7,10,20,.72);
+                             border-bottom: 3px solid var(--gold); }
+
+  /* tower panel — REPLACES the rail in the same slot (Phase 2 F8) */
+  .towerpanel { display: flex; gap: var(--s3); align-items: center; }
+  .towerpanel img { width: 62px; border: var(--hair); border-radius: var(--r-sm); }
+  .tp-body { flex: 1; }
+  .tp-name { font-family: var(--display); font-size: 14px; color: var(--gold-bright); }
+  .pips { display: flex; gap: 3px; margin: 4px 0 6px; }
+  .pips i { width: 9px; height: 9px; border: 1px solid var(--gold-dim); border-radius: 50%; }
+  .pips i.on { background: var(--gold); border-color: var(--gold-bright); }
+  .tp-stats { font-size: 11px; color: var(--ink-2); font-family: var(--num); }
+  .tp-actions { display: flex; flex-direction: column; gap: 4px; }
+  .tp-actions .btn { font-size: 11px; padding: 6px 10px; min-height: 0; }
+
+  /* stage select */
+  .stage-head { padding: var(--s3); border-bottom: var(--hair); display: flex; align-items: baseline; gap: var(--s2); }
+  .chapter { font-family: var(--display); font-size: 18px; color: var(--gold-bright); }
+  .chest-rail { display: flex; gap: var(--s2); padding: var(--s3); border-top: var(--hair); }
+  .chest { flex: 1; text-align: center; font-size: 10px; color: var(--ink-3); }
+  .chest .bar { height: 4px; background: #16224a; border-radius: 2px; margin-bottom: 4px; }
+  .chest .bar i { display: block; height: 100%; background: var(--gold); border-radius: 2px; }
+
+  /* results */
+  .banner { font-family: var(--display); font-size: 15px; letter-spacing: .3em; color: var(--gold); text-align: center; }
+  .bignum { font-family: var(--display); font-size: 52px; text-align: center; color: var(--ink); line-height: 1; }
+  .stars { display: flex; justify-content: center; gap: var(--s2); font-size: 30px; color: var(--gold); }
+  .stars .off { color: #263054; }
+  .rewards { display: flex; gap: var(--s2); justify-content: center; margin-top: var(--s4); }
+  .reward { flex: 1; border: var(--hair); border-radius: var(--r-sm); padding: var(--s2); text-align: center;
+            font-size: 11px; background: var(--panel); font-family: var(--num); }
+
+  /* preview chip for fixture shells */
+  .preview-chip { font-size: 9px; letter-spacing: .16em; border: 1px solid var(--gold-dim); color: var(--gold-dim);
+                  padding: 2px 6px; border-radius: 2px; }
+
+  /* tokens page */
+  .swatches { display: flex; flex-wrap: wrap; gap: 12px; }
+  .sw { width: 132px; }
+  .sw .chip { height: 54px; border: var(--hair); border-radius: var(--r-sm); }
+  .sw code { font-size: 10px; color: var(--ink-3); display: block; margin-top: 4px; font-family: var(--num); }
+  .sw b { font-size: 11px; color: var(--ink-2); font-weight: 500; }
+  .specimen { border: var(--hair); border-radius: var(--r-md); padding: var(--s4); background: var(--panel); margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="board">
+
+<h1>React TD — Design References<span class="kanji">リアクトTD ・ 魔法の塔防衛</span></h1>
+<p class="lede">
+  Hand-built HTML, not AI-generated mockups. Every screen encodes the decisions from the
+  <code>/autoplan</code> review: dark navy chrome with gold hairlines (not cream), English-first
+  labels with kanji as flavour only, Fire / Ice / Lightning / Wind, a three-segment
+  <em>leak</em> ring rather than a crystal HP bar, and the tower panel swapping into the card
+  rail instead of opening a modal. Portraits are real crops from <code>references/</code> via
+  <code>design/atlas/</code>.
+</p>
+<p class="warn">
+  Frames are 375&times;812. The stated floor is 360&times;640 — narrow your window to check the
+  rail still holds four 44px cards. Fonts here are system fallbacks so this renders offline;
+  DESIGN.md (task T0) must name the real faces.
+</p>
+
+<!-- ============ shared battlefield, defined once ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="crystalGlow"><stop offset="0" stop-color="#9fd8ff" stop-opacity=".9"/><stop offset="1" stop-color="#9fd8ff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="crystalBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eaf6ff"/><stop offset="1" stop-color="#3f7fc4"/></linearGradient>
+
+    <symbol id="field" viewBox="0 0 375 470">
+      <!-- flat 3-value ground. NOT noise: noise reads as texture at 2000px and as mud at 360px (Phase 3 #18) -->
+      <rect width="375" height="470" fill="#152a1c"/>
+      <path d="M0 0h375v150H0z" fill="#18321f"/>
+      <path d="M0 320h375v150H0z" fill="#122417"/>
+      <!-- path: solid stroke + 2px gold inner rule -->
+      <path id="lane" d="M40 -10 C40 90 320 90 320 175 C320 250 55 240 55 315 C55 372 190 372 190 396"
+            fill="none" stroke="#c9b083" stroke-width="30" stroke-linecap="round"/>
+      <use href="#lane" stroke="#e6d4ad" stroke-width="26" fill="none"/>
+      <use href="#lane" stroke="var(--gold-dim)" stroke-width="2" fill="none" opacity=".55"/>
+
+      <!-- hex sockets (one pre-rendered sprite in the real build) -->
+      <g fill="#1d3a26" stroke="#2f5c3c" stroke-width="1.5">
+        <path d="M110 130l14 8v16l-14 8-14-8v-16z"/>
+        <path d="M232 232l14 8v16l-14 8-14-8v-16z"/>
+        <path d="M120 300l14 8v16l-14 8-14-8v-16z"/>
+        <path d="M262 330l14 8v16l-14 8-14-8v-16z"/>
+      </g>
+
+      <!-- placed tower, tier 3: magic circle carries the tier (Phase 2 F9) -->
+      <g transform="translate(196,150)">
+        <circle r="30" fill="none" stroke="#e05a3a" stroke-width="1" opacity=".55"/>
+        <circle r="23" fill="none" stroke="#e05a3a" stroke-width="1" opacity=".75" stroke-dasharray="4 3"/>
+        <circle r="16" fill="none" stroke="#ff8a5c" stroke-width="1.2"/>
+        <circle cx="0" cy="-30" r="2.5" fill="#ff8a5c"/>
+        <rect x="-8" y="-24" width="16" height="26" fill="#1d2a4d" stroke="#d4a843" stroke-width="1.2"/>
+        <path d="M-8-24l8-9 8 9z" fill="#b3202e" stroke="#d4a843" stroke-width="1"/>
+      </g>
+      <!-- placed tower, tier 1 -->
+      <g transform="translate(268,268)">
+        <circle r="16" fill="none" stroke="#2f6fd0" stroke-width="1.2" opacity=".8"/>
+        <rect x="-7" y="-20" width="14" height="22" fill="#1d2a4d" stroke="#d4a843" stroke-width="1.2"/>
+        <path d="M-7-20l7-8 7 8z" fill="#1b3f8f" stroke="#d4a843" stroke-width="1"/>
+      </g>
+
+      <!-- enemies: flat cloaked silhouettes with element rim light -->
+      <g>
+        <g transform="translate(120,58)"><path d="M0-11c6 0 9 5 9 11s-4 10-9 10-9-4-9-10 3-11 9-11z" fill="#0c1410" stroke="#ff8a5c" stroke-width="1.2"/></g>
+        <g transform="translate(196,74)"><path d="M0-11c6 0 9 5 9 11s-4 10-9 10-9-4-9-10 3-11 9-11z" fill="#0c1410" stroke="#ff8a5c" stroke-width="1.2"/></g>
+        <g transform="translate(300,140)"><path d="M0-11c6 0 9 5 9 11s-4 10-9 10-9-4-9-10 3-11 9-11z" fill="#0c1410" stroke="#7fb4ee" stroke-width="1.2"/></g>
+        <g transform="translate(150,255)"><path d="M0-13c7 0 11 6 11 13s-5 12-11 12-11-5-11-12 4-13 11-13z" fill="#0c1410" stroke="#fff0b8" stroke-width="1.4"/></g>
+      </g>
+
+      <!-- damage numbers: pre-rendered glyph atlas in the real build, fillText is too costly (Phase 3 #13) -->
+      <text x="208" y="66" font-size="13" font-family="monospace" fill="#ff8a5c" stroke="#2a0d06" stroke-width="2.5" paint-order="stroke">142</text>
+      <text x="312" y="130" font-size="11" font-family="monospace" fill="#7fb4ee" stroke="#06121f" stroke-width="2.5" paint-order="stroke">88</text>
+
+      <!-- the crystal: visual anchor, and it carries the lose condition in-world -->
+      <g transform="translate(190,400)">
+        <circle r="60" fill="url(#crystalGlow)"/>
+        <path d="M0-30l14 18-5 26H-9l-5-26z" fill="url(#crystalBody)" stroke="#cfe9ff" stroke-width="1"/>
+        <path d="M-14-4l-9 7 4 19h7z" fill="#6fa8dc" opacity=".85"/>
+        <path d="M14-4l9 7-4 19h-7z" fill="#6fa8dc" opacity=".85"/>
+        <!-- THREE-SEGMENT LEAK RING. Not an HP bar: leaks are discrete (Phase 3 #11).
+             Two segments lit = 2 leaks left. The spent one is dim red, not missing, so the
+             player can always see how many they started with. -->
+        <g fill="none" stroke-width="6" stroke-linecap="round">
+          <path d="M-37.9 15.7A41 41 0 0 1 -20.5 -35.5" stroke="#4e9c63"/>
+          <path d="M-14.2 -38.5A41 41 0 0 1 14.2 -38.5" stroke="#4e9c63"/>
+          <path d="M20.5 -35.5A41 41 0 0 1 37.9 15.7" stroke="#e0443c" opacity=".3"/>
+        </g>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ==================== ROW 1 ==================== -->
+<div class="row">
+
+  <!-- TITLE -->
+  <div class="item">
+    <h2>1 — Title</h2>
+    <div class="note">START outweighs everything (F5). The four meta tabs are dimmed and chipped
+      PREVIEW so a dead fixture never outcompetes the one real action. Mood reel loops behind.</div>
+    <div class="phone">
+      <div style="flex:1; position:relative; display:flex; flex-direction:column; justify-content:center; align-items:center;
+                  background:radial-gradient(120% 90% at 50% 20%, #1d2c52 0%, #070a14 70%);">
+        <div style="position:absolute; inset:0; opacity:.28; background:
+             radial-gradient(closest-side, rgba(212,168,67,.5), transparent 70%) 50% 30%/300px 300px no-repeat;"></div>
+        <div style="text-align:center; z-index:1;">
+          <div class="label-en" style="font-size:46px; color:var(--gold-bright); text-shadow:0 2px 18px rgba(212,168,67,.5);">React<span style="color:#c8474a;"> TD</span></div>
+          <span class="kanji" style="font-size:12px; margin-top:8px;">リアクトTD</span>
+          <span class="kanji" style="font-size:10px; margin-top:4px; opacity:.55;">魔法の塔防衛</span>
+        </div>
+        <div style="display:flex; gap:6px; margin-top:26px; z-index:1;">
+          <span style="width:26px;height:26px;border-radius:50%;background:var(--fire);border:1px solid var(--gold)"></span>
+          <span style="width:26px;height:26px;border-radius:50%;background:var(--ice);border:1px solid var(--gold)"></span>
+          <span style="width:26px;height:26px;border-radius:50%;background:var(--lightning);border:1px solid var(--gold)"></span>
+          <span style="width:26px;height:26px;border-radius:50%;background:var(--wind);border:1px solid var(--gold)"></span>
+        </div>
+        <button class="btn btn-primary btn-lg" style="margin-top:40px; z-index:1;">START</button>
+      </div>
+      <div style="display:flex; gap:var(--s2); padding:var(--s3); border-top:var(--hair); opacity:.42;">
+        <div class="tab btn" style="flex:1; font-size:10px; padding:8px 0; text-align:center;">SHOP</div>
+        <div class="tab btn" style="flex:1; font-size:10px; padding:8px 0; text-align:center;">SUMMON</div>
+        <div class="tab btn" style="flex:1; font-size:10px; padding:8px 0; text-align:center;">MISSIONS</div>
+        <div class="tab btn" style="flex:1; font-size:10px; padding:8px 0; text-align:center;">MENU</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAGE SELECT -->
+  <div class="item">
+    <h2>2 — Stage Select</h2>
+    <div class="note">Next playable node pulses gold, cleared nodes drop to 60% but keep stars,
+      locked are flat (F6). Chests rescaled to <b>3 / 6 / 9</b> — the mockup's 12/24/36 was
+      unreachable against a 9-star maximum (F15). Stamina dropped (F19).</div>
+    <div class="phone">
+      <div class="stage-head">
+        <div>
+          <div class="chapter">Ch. 1 — Ember Vale</div>
+          <span class="kanji">第1章 燃ゆる谷</span>
+        </div>
+        <div class="spacer"></div>
+        <div class="hud-pill"><span style="color:var(--gold)">◉</span><span class="num">1,250</span></div>
+      </div>
+      <div style="flex:1; position:relative; background:linear-gradient(180deg,#152a1c,#0e1c13);">
+        <svg viewBox="0 0 375 520" style="width:100%;height:100%">
+          <path d="M70 470 L130 380 L110 280 L200 210 L170 120 L260 60" fill="none" stroke="#2f5c3c" stroke-width="3" stroke-dasharray="5 5"/>
+          <g font-family="monospace" font-size="11" text-anchor="middle">
+            <g><circle cx="70" cy="470" r="19" fill="#1d3a26" stroke="var(--gold-dim)" stroke-width="2"/><text x="70" y="474" fill="#a8b4d4">1-1</text><text x="70" y="500" fill="var(--gold)" font-size="12">★★★</text></g>
+            <g><circle cx="130" cy="380" r="19" fill="#1d3a26" stroke="var(--gold-dim)" stroke-width="2"/><text x="130" y="384" fill="#a8b4d4">1-2</text><text x="130" y="410" fill="var(--gold)" font-size="12">★★☆</text></g>
+            <g opacity="1"><circle cx="110" cy="280" r="23" fill="#24402c" stroke="var(--gold)" stroke-width="3"/><text x="110" y="285" fill="#fff" font-size="12">1-3</text>
+              <circle cx="110" cy="280" r="30" fill="none" stroke="var(--gold)" stroke-width="1.5" opacity=".5"/></g>
+            <g opacity=".35"><circle cx="200" cy="210" r="19" fill="#141c33" stroke="#2a3352" stroke-width="2"/><text x="200" y="214" fill="#4a5578">1-4</text></g>
+            <g opacity=".35"><circle cx="170" cy="120" r="19" fill="#141c33" stroke="#2a3352" stroke-width="2"/><text x="170" y="124" fill="#4a5578">1-5</text></g>
+            <g opacity=".35"><circle cx="260" cy="60" r="24" fill="#2a1220" stroke="#5c2030" stroke-width="2"/><text x="260" y="64" fill="#8a4a58" font-size="10">BOSS</text></g>
+          </g>
+        </svg>
+      </div>
+      <div class="chest-rail">
+        <div class="chest"><div class="bar"><i style="width:100%"></i></div>★3</div>
+        <div class="chest"><div class="bar"><i style="width:83%"></i></div>★6</div>
+        <div class="chest"><div class="bar"><i style="width:0"></i></div>★9</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BATTLE -->
+  <div class="item">
+    <h2>3 — Battle (default)</h2>
+    <div class="note">Crystal HP is <em>not</em> a HUD element — it lives in-world as the
+      three-segment leak ring, so "am I losing" is pre-attentive (F3). Card states left to right:
+      affordable, affordable, unaffordable, cooldown (F4).</div>
+    <div class="phone">
+      <div class="topbar">
+        <div class="hud-pill">WAVE <span class="num">7/15</span></div>
+        <div class="hud-pill">☠ <span class="num">14/22</span></div>
+        <div class="spacer"></div>
+        <div class="icon-btn">×2</div>
+        <div class="icon-btn">❙❙</div>
+      </div>
+      <div class="field"><svg viewBox="0 0 375 470" preserveAspectRatio="xMidYMid slice"><use href="#field"/></svg></div>
+      <div class="bottom">
+        <div class="mana"><span class="val num">120 / 200</span>
+          <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <div class="rail">
+          <div class="card el-fire is-affordable"><span class="badge"></span><img src="atlas/hikari-neutral.png" alt="Red Mage"><span class="cost">100</span></div>
+          <div class="card el-ice is-affordable"><span class="badge"></span><img src="atlas/aoi-neutral.png" alt="Frost Mage"><span class="cost">100</span></div>
+          <div class="card el-lightning is-unaffordable"><span class="badge"></span><img src="atlas/kai-neutral.png" alt="Storm Mage"><span class="cost">120</span></div>
+          <div class="card el-wind is-cooldown"><span class="badge"></span><img src="atlas/takumi-neutral.png" alt="Gale Mage"><span class="cost">100</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BATTLE SELECTED -->
+  <div class="item">
+    <h2>4 — Battle, mage selected</h2>
+    <div class="note">Selected card lifts 4px with a 2px gold border and the range circle appears
+      on the field. Buildable sockets highlight; blocked ones show why. Tap the card again or
+      tap off-grid to deselect (Esc on desktop).</div>
+    <div class="phone">
+      <div class="topbar">
+        <div class="hud-pill">WAVE <span class="num">7/15</span></div>
+        <div class="hud-pill">☠ <span class="num">14/22</span></div>
+        <div class="spacer"></div>
+        <div class="icon-btn">×2</div>
+        <div class="icon-btn">❙❙</div>
+      </div>
+      <div class="field">
+        <svg viewBox="0 0 375 470" preserveAspectRatio="xMidYMid slice">
+          <use href="#field"/>
+          <g>
+            <circle cx="120" cy="308" r="78" fill="rgba(224,90,58,.10)" stroke="#e05a3a" stroke-width="1.5" stroke-dasharray="6 4"/>
+            <g transform="translate(120,308)" opacity=".85">
+              <circle r="18" fill="none" stroke="#ff8a5c" stroke-width="1.2"/>
+              <rect x="-8" y="-24" width="16" height="26" fill="#1d2a4d" stroke="#d4a843" stroke-width="1.2" opacity=".7"/>
+              <path d="M-8-24l8-9 8 9z" fill="#b3202e" stroke="#d4a843" stroke-width="1" opacity=".7"/>
+            </g>
+            <path d="M262 330l14 8v16l-14 8-14-8v-16z" fill="none" stroke="var(--gold)" stroke-width="2"/>
+            <path d="M110 130l14 8v16l-14 8-14-8v-16z" fill="none" stroke="var(--gold)" stroke-width="2"/>
+          </g>
+        </svg>
+      </div>
+      <div class="bottom">
+        <div class="mana"><span class="val num">120 / 200</span>
+          <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <div class="rail">
+          <div class="card el-fire is-selected"><span class="badge"></span><img src="atlas/hikari-happy.png" alt="Red Mage"><span class="cost">100</span></div>
+          <div class="card el-ice is-affordable"><span class="badge"></span><img src="atlas/aoi-neutral.png" alt="Frost Mage"><span class="cost">100</span></div>
+          <div class="card el-lightning is-unaffordable"><span class="badge"></span><img src="atlas/kai-neutral.png" alt="Storm Mage"><span class="cost">120</span></div>
+          <div class="card el-wind is-affordable"><span class="badge"></span><img src="atlas/takumi-neutral.png" alt="Gale Mage"><span class="cost">100</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== ROW 2 ==================== -->
+<div class="row">
+
+  <!-- TOWER PANEL -->
+  <div class="item">
+    <h2>5 — Battle, tower selected</h2>
+    <div class="note">The missing interface (F8). The rail <em>swaps</em> to a tower panel in the
+      same slot — no modal, which a 640px-tall viewport cannot afford. Tier pips mirror the
+      magic-circle rings on the field so tier is legible in both places (F9).</div>
+    <div class="phone">
+      <div class="topbar">
+        <div class="hud-pill">WAVE <span class="num">7/15</span></div>
+        <div class="hud-pill">☠ <span class="num">14/22</span></div>
+        <div class="spacer"></div>
+        <div class="icon-btn">×2</div>
+        <div class="icon-btn">❙❙</div>
+      </div>
+      <div class="field">
+        <svg viewBox="0 0 375 470" preserveAspectRatio="xMidYMid slice">
+          <use href="#field"/>
+          <circle cx="196" cy="150" r="92" fill="rgba(224,90,58,.09)" stroke="#e05a3a" stroke-width="1.5"/>
+          <circle cx="196" cy="150" r="34" fill="none" stroke="var(--gold-bright)" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="bottom">
+        <div class="towerpanel">
+          <img src="atlas/hikari-profile.png" alt="Red Mage">
+          <div class="tp-body">
+            <div class="tp-name">Red Mage <span style="color:var(--ink-3);font-size:11px">Tier 3</span></div>
+            <span class="kanji" style="margin:-2px 0 0">レッドメイジ</span>
+            <div class="pips"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+            <div class="tp-stats">DPS 320 · RNG 92 · Fire</div>
+          </div>
+          <div class="tp-actions">
+            <button class="btn is-locked">MAX</button>
+            <button class="btn">SELL +60</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERWAVE -->
+  <div class="item">
+    <h2>6 — Interwave</h2>
+    <div class="note">A state-machine node that had no UI at all (F10). This is the planning
+      beat — the screen where the player actually thinks. Skipping early grants mana, which is a
+      third income source balance must account for (Phase 3 #17).</div>
+    <div class="phone">
+      <div class="topbar">
+        <div class="hud-pill">WAVE <span class="num">7/15</span></div>
+        <div class="hud-pill">☠ <span class="num">22/22</span></div>
+        <div class="spacer"></div>
+        <div class="icon-btn">×2</div>
+        <div class="icon-btn">❙❙</div>
+      </div>
+      <div class="field">
+        <svg viewBox="0 0 375 470" preserveAspectRatio="xMidYMid slice"><use href="#field"/></svg>
+        <div style="position:absolute; inset:0; background:rgba(7,10,20,.55); display:flex;
+                    flex-direction:column; align-items:center; justify-content:center; gap:var(--s4);">
+          <div style="text-align:center">
+            <div class="banner">WAVE 8 INCOMING</div>
+            <span class="kanji" style="margin-top:6px">第8波</span>
+          </div>
+          <div style="display:flex; gap:var(--s2)">
+            <div style="width:38px;height:38px;border:var(--hair);border-radius:var(--r-sm);background:var(--panel);
+                        display:grid;place-items:center;color:var(--fire-glow);font-size:16px">◆</div>
+            <div style="width:38px;height:38px;border:var(--hair);border-radius:var(--r-sm);background:var(--panel);
+                        display:grid;place-items:center;color:var(--fire-glow);font-size:16px">◆</div>
+            <div style="width:38px;height:38px;border:var(--hair);border-radius:var(--r-sm);background:var(--panel);
+                        display:grid;place-items:center;color:var(--lightning-glow);font-size:20px">◆</div>
+          </div>
+          <div style="font-size:11px;color:var(--ink-2)">3 types · 22 enemies</div>
+          <button class="btn btn-primary" style="margin-top:var(--s2)">READY &nbsp;<span class="num">8s</span></button>
+          <div style="font-size:10px;color:var(--gold-dim);margin-top:calc(var(--s4) * -1 + 4px)">skip early for +30 mana</div>
+        </div>
+      </div>
+      <div class="bottom">
+        <div class="mana"><span class="val num">150 / 200</span>
+          <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+        <div class="rail">
+          <div class="card el-fire is-affordable"><span class="badge"></span><img src="atlas/hikari-neutral.png" alt=""><span class="cost">100</span></div>
+          <div class="card el-ice is-affordable"><span class="badge"></span><img src="atlas/aoi-neutral.png" alt=""><span class="cost">100</span></div>
+          <div class="card el-lightning is-affordable"><span class="badge"></span><img src="atlas/kai-neutral.png" alt=""><span class="cost">120</span></div>
+          <div class="card el-wind is-affordable"><span class="badge"></span><img src="atlas/takumi-neutral.png" alt=""><span class="cost">100</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAGE INFO -->
+  <div class="item">
+    <h2>7 — Mage Info</h2>
+    <div class="note">The screen the CEO pass cut and the design pass put back (M8): near-zero
+      logic, highest visual-fidelity-per-hour on the sheet. Cream is allowed <em>here</em> — it
+      reads as a character dossier, which is what the source sheet is. Two locked actions use
+      the mockup's own padlock treatment (F7).</div>
+    <div class="phone">
+      <div class="topbar">
+        <div class="icon-btn">←</div>
+        <div class="spacer"></div>
+        <div class="hud-pill" style="color:var(--gold)">★★★★★</div>
+      </div>
+      <div style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
+        <div style="background:linear-gradient(180deg,#f3ead8,#ded2b8); padding:var(--s4); text-align:center;
+                    border-bottom:2px solid var(--gold);">
+          <img src="atlas/hikari-neutral.png" alt="Red Mage"
+               style="width:150px; border:2px solid var(--gold); border-radius:var(--r-sm); box-shadow:0 4px 14px rgba(0,0,0,.3)">
+          <div class="label-en" style="font-size:22px; color:#7d2130; margin-top:var(--s3)">Red Mage</div>
+          <span class="kanji" style="color:#8a6d2b">レッドメイジ ・ 光（ひかり）</span>
+        </div>
+        <div style="padding:var(--s3); display:flex; align-items:center; gap:var(--s2); border-bottom:var(--hair);">
+          <span style="width:18px;height:18px;border-radius:50%;background:var(--fire);border:1px solid var(--gold)"></span>
+          <span style="font-size:12px;color:var(--ink-2)">FIRE</span>
+          <div class="spacer"></div>
+          <span class="num" style="font-size:12px">Lv. 20 / 30</span>
+        </div>
+        <div style="padding:var(--s3); display:grid; grid-template-columns:1fr 1fr; gap:var(--s2) var(--s4); font-size:12px;">
+          <div style="display:flex;justify-content:space-between;color:var(--ink-2)">HP <span class="num" style="color:var(--ink)">1,250</span></div>
+          <div style="display:flex;justify-content:space-between;color:var(--ink-2)">ATK <span class="num" style="color:var(--ink)">320</span></div>
+          <div style="display:flex;justify-content:space-between;color:var(--ink-2)">INT <span class="num" style="color:var(--ink)">450</span></div>
+          <div style="display:flex;justify-content:space-between;color:var(--ink-2)">DEF <span class="num" style="color:var(--ink)">120</span></div>
+          <div style="display:flex;justify-content:space-between;color:var(--ink-2)">SPD <span class="num" style="color:var(--ink)">110</span></div>
+        </div>
+        <div class="panel" style="margin:0 var(--s3) var(--s3); padding:var(--s3);">
+          <div style="display:flex; align-items:center; gap:var(--s2)">
+            <span style="width:24px;height:24px;border-radius:50%;background:var(--fire);border:1px solid var(--gold)"></span>
+            <div>
+              <div class="label-en" style="font-size:13px; color:var(--gold-bright)">Flame Burst <span style="color:var(--ink-3);font-size:11px">Lv.3</span></div>
+              <span class="kanji" style="font-size:9px">フレイムバースト</span>
+            </div>
+          </div>
+          <p style="font-size:11px; color:var(--ink-2); margin-top:var(--s2); line-height:1.5">
+            Deals 280% INT as fire damage to all enemies in range.</p>
+        </div>
+        <div style="margin:0 var(--s3) var(--s3)">
+          <div style="font-size:10px; letter-spacing:.16em; color:var(--ink-3); margin-bottom:var(--s2)">
+            REACTIVE PORTRAIT SET</div>
+          <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:4px">
+            <img src="atlas/hikari-neutral.png" style="width:100%;border:var(--hair);border-radius:2px" title="idle">
+            <img src="atlas/hikari-happy.png"  style="width:100%;border:var(--hair);border-radius:2px" title="multi-kill">
+            <img src="atlas/hikari-profile.png" style="width:100%;border:var(--hair);border-radius:2px" title="wave clear">
+            <img src="atlas/hikari-worried.png" style="width:100%;border:var(--hair);border-radius:2px" title="crystal under 30%">
+            <img src="atlas/hikari-shout.png"  style="width:100%;border:var(--hair);border-radius:2px" title="skill fire">
+            <img src="atlas/hikari-calm.png"   style="width:100%;border:var(--hair);border-radius:2px" title="between waves">
+          </div>
+          <p style="font-size:10px; color:var(--ink-3); margin-top:6px; line-height:1.5">
+            idle · multi-kill · wave clear · crystal &lt;30% · skill fire · interwave. Six states per
+            mage, already drawn on the sheet (E1).</p>
+        </div>
+      </div>
+      <div class="bottom" style="display:flex; gap:var(--s2)">
+        <button class="btn is-locked" style="flex:1; font-size:11px">🔒 LEVEL UP</button>
+        <button class="btn is-locked" style="flex:1; font-size:11px">🔒 EQUIP</button>
+        <button class="btn btn-primary" style="flex:1; font-size:11px">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VICTORY -->
+  <div class="item">
+    <h2>8 — Victory</h2>
+    <div class="note">The MVP mage carries it (F17) — the one moment the anime identity should
+      land had no anime in it. Stars come from leaks remaining, and the rule is echoed so the
+      rating never reads as arbitrary (F28).</div>
+    <div class="phone">
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:var(--s5);
+                  background:radial-gradient(110% 70% at 50% 30%, #23315c 0%, #070a14 70%);">
+        <div style="text-align:center">
+          <div class="banner" style="font-size:13px">VICTORY</div>
+          <span class="kanji" style="margin-top:4px">勝利</span>
+        </div>
+        <div class="stars" style="margin:var(--s4) 0">★ ★ ★</div>
+        <img src="atlas/hikari-happy.png" alt="MVP"
+             style="width:130px; align-self:center; border:2px solid var(--gold); border-radius:var(--r-sm);
+                    box-shadow:0 0 30px rgba(224,90,58,.4)">
+        <div style="text-align:center; margin-top:var(--s2); font-size:11px; color:var(--ink-3)">
+          MVP · <span style="color:var(--gold-bright)">Red Mage</span> · 42% of damage</div>
+        <div style="text-align:center; margin-top:var(--s4); font-size:12px; color:var(--ink-2)" class="num">
+          STAGE 1-3 &nbsp;·&nbsp; 02:45 &nbsp;·&nbsp; 3 leaks left</div>
+        <div class="rewards">
+          <div class="reward"><div style="color:var(--gold)">◉</div>1,250</div>
+          <div class="reward"><div style="color:var(--ice-glow)">◆</div>120</div>
+          <div class="reward"><div style="color:var(--fire-lt)">●</div>5</div>
+        </div>
+      </div>
+      <div class="bottom" style="display:flex; gap:var(--s2)">
+        <button class="btn" style="flex:1">RETRY</button>
+        <button class="btn btn-primary" style="flex:2">NEXT STAGE</button>
+        <button class="btn" style="flex:0 0 52px">⌂</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== ROW 3 ==================== -->
+<div class="row">
+
+  <!-- DEFEAT -->
+  <div class="item">
+    <h2>9 — Defeat</h2>
+    <div class="note">Achievement first (F12): the wave you reached is the banner-scale number,
+      DEFEAT is secondary. Names the leak that ended the run, marks a personal best, and RETRY is
+      primary and re-enters in under a second (F16). A loss should teach, not punish.</div>
+    <div class="phone">
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:var(--s5);
+                  background:radial-gradient(110% 70% at 50% 30%, #3a1c22 0%, #070a14 70%);">
+        <div style="text-align:center; font-size:11px; letter-spacing:.28em; color:var(--ink-3)">REACHED</div>
+        <div class="bignum" style="margin:var(--s2) 0">WAVE 12<span style="font-size:22px;color:var(--ink-3)"> / 15</span></div>
+        <div style="text-align:center; font-size:11px; color:var(--gold)">◆ personal best</div>
+        <div style="text-align:center; margin-top:var(--s5)">
+          <span class="banner" style="font-size:12px; color:var(--danger)">DEFEAT</span>
+          <span class="kanji" style="margin-top:4px">敗北</span>
+        </div>
+        <div class="panel" style="margin-top:var(--s5); padding:var(--s3); text-align:center">
+          <div style="font-size:11px; color:var(--ink-3)">what got through</div>
+          <div style="display:flex; align-items:center; justify-content:center; gap:var(--s2); margin-top:6px">
+            <span style="width:16px;height:16px;border-radius:50%;background:#0c1410;border:1.5px solid var(--lightning-glow)"></span>
+            <span style="font-size:13px; color:var(--ink)">Storm Wraith</span>
+            <span class="num" style="font-size:12px; color:var(--danger)">×4</span>
+          </div>
+          <div style="font-size:10px; color:var(--ink-3); margin-top:6px">resists Fire · try Ice or Wind</div>
+        </div>
+      </div>
+      <div class="bottom" style="display:flex; gap:var(--s2)">
+        <button class="btn btn-primary" style="flex:2">RETRY</button>
+        <button class="btn" style="flex:1">STAGES</button>
+        <button class="btn" style="flex:0 0 52px">⌂</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHOP SHELL -->
+  <div class="item">
+    <h2>10 — Shop (fixture shell)</h2>
+    <div class="note">Renders the mockup's literal fixture content with a PREVIEW chip — never
+      "coming soon", which would spend the screen and buy nothing (F11). Structurally there is no
+      <code>&lt;form&gt;</code>, no <code>&lt;input&gt;</code>, no <code>onSubmit</code>, so wiring
+      a real payment path means deleting code rather than adding a handler (Phase 3 S-b).</div>
+    <div class="phone">
+      <div class="topbar">
+        <div class="icon-btn">←</div>
+        <div class="label-en" style="font-size:14px; color:var(--gold-bright)">Shop</div>
+        <span class="preview-chip">PREVIEW</span>
+        <div class="spacer"></div>
+        <div class="hud-pill"><span style="color:var(--gold)">◉</span><span class="num">1,250</span></div>
+      </div>
+      <div style="flex:1; padding:var(--s3); display:flex; flex-direction:column; gap:var(--s3);">
+        <div class="panel" style="padding:var(--s3); border-color:#7d2130;">
+          <div style="display:flex; align-items:baseline; gap:var(--s2)">
+            <div class="label-en" style="font-size:14px; color:#e07a6a">Starter Pack</div>
+            <span class="kanji" style="font-size:9px">初心者パック</span>
+            <div class="spacer"></div><span style="font-size:9px;color:var(--gold-dim)">1 left</span>
+          </div>
+          <div style="display:flex; gap:var(--s2); margin-top:var(--s2); align-items:center">
+            <div class="reward" style="flex:1">×300</div><div class="reward" style="flex:1">×10</div>
+            <div class="reward" style="flex:1">×1</div>
+            <div class="btn" style="background:linear-gradient(180deg,#c9a227,#8a6d2b);color:#1a1206">¥480</div>
+          </div>
+        </div>
+        <div class="panel" style="padding:var(--s3); border-color:var(--gold);">
+          <div style="display:flex; align-items:baseline; gap:var(--s2)">
+            <div class="label-en" style="font-size:14px; color:var(--gold-bright)">Growth Pack</div>
+            <span class="kanji" style="font-size:9px">成長パック</span>
+          </div>
+          <div style="display:flex; gap:var(--s2); margin-top:var(--s2); align-items:center">
+            <div class="reward" style="flex:1">×1,000</div><div class="reward" style="flex:1">×3</div>
+            <div class="reward" style="flex:1">×20</div>
+            <div class="btn" style="background:linear-gradient(180deg,#c9a227,#8a6d2b);color:#1a1206">¥1,200</div>
+          </div>
+        </div>
+        <div class="panel" style="padding:var(--s3); border-color:var(--ice-lt);">
+          <div style="display:flex; align-items:baseline; gap:var(--s2)">
+            <div class="label-en" style="font-size:14px; color:var(--ice-glow)">Gem Pack</div>
+            <span class="kanji" style="font-size:9px">ジェムパック</span>
+          </div>
+          <div style="display:flex; gap:var(--s2); margin-top:var(--s2); align-items:center">
+            <div class="reward" style="flex:2">×500</div>
+            <div class="btn" style="background:linear-gradient(180deg,#2f6fd0,#1b3f8f);color:#eaf6ff">¥610</div>
+          </div>
+        </div>
+        <p style="font-size:10px; color:var(--ink-3); text-align:center; margin-top:auto; line-height:1.6">
+          Fixture data from the reference sheet.<br>No backing system, no payment path.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOKENS -->
+  <div class="item" style="width:790px">
+    <h2>11 — Design system</h2>
+    <div class="note">The tokens every screen above is built from. This is the raw material for
+      DESIGN.md (task T0), which must land <em>before</em> any UI file — otherwise each screen
+      invents its own spacing, radius, and border weight (F24).</div>
+    <div class="panel" style="padding:var(--s5)">
+
+      <div style="font-family:var(--display); color:var(--gold); margin-bottom:var(--s3)">Chrome</div>
+      <div class="swatches" style="margin-bottom:var(--s5)">
+        <div class="sw"><div class="chip" style="background:var(--bg)"></div><b>bg</b><code>#070a14</code></div>
+        <div class="sw"><div class="chip" style="background:var(--panel)"></div><b>panel</b><code>#101830</code></div>
+        <div class="sw"><div class="chip" style="background:var(--panel-3)"></div><b>panel-3</b><code>#1d2a4d</code></div>
+        <div class="sw"><div class="chip" style="background:var(--gold)"></div><b>gold</b><code>#d4a843</code></div>
+        <div class="sw"><div class="chip" style="background:var(--gold-bright)"></div><b>gold-bright</b><code>#f4d98a</code></div>
+        <div class="sw"><div class="chip" style="background:var(--danger)"></div><b>danger</b><code>#e0443c</code></div>
+      </div>
+
+      <div style="font-family:var(--display); color:var(--gold); margin-bottom:var(--s3)">
+        Elements — Fire / Ice / Lightning / Wind</div>
+      <div class="swatches" style="margin-bottom:var(--s5)">
+        <div class="sw"><div class="chip" style="background:linear-gradient(135deg,var(--fire),var(--fire-lt) 60%,var(--fire-glow))"></div><b>Fire · Hikari</b><code>#b3202e</code></div>
+        <div class="sw"><div class="chip" style="background:linear-gradient(135deg,var(--ice),var(--ice-lt) 60%,var(--ice-glow))"></div><b>Ice · Aoi</b><code>#1b3f8f</code></div>
+        <div class="sw"><div class="chip" style="background:linear-gradient(135deg,var(--lightning),var(--lightning-lt) 60%,var(--lightning-glow))"></div><b>Lightning · Kai</b><code>#c99a1e</code></div>
+        <div class="sw"><div class="chip" style="background:linear-gradient(135deg,var(--wind),var(--wind-lt) 60%,var(--wind-glow))"></div><b>Wind · Takumi</b><code>#1f6b45</code></div>
+      </div>
+      <p style="font-size:11px;color:var(--ink-3);margin:-12px 0 24px;line-height:1.6;max-width:64ch">
+        Kai's pose art reads as radiance and Takumi's shows rocks and leaves, but the mockup's
+        element set wins. Element identity is carried by what we author — decals, VFX, magic
+        circles, badges. Do not build Wind VFX out of leaves.</p>
+
+      <div style="font-family:var(--display); color:var(--gold); margin-bottom:var(--s3)">Type — English first</div>
+      <div class="specimen">
+        <div class="label-en" style="font-size:30px; color:var(--gold-bright)">Ember Vale</div>
+        <span class="kanji">第1章 燃ゆる谷</span>
+        <p style="font-size:11px;color:var(--ink-3);margin-top:10px">Display serif for banners and chapter names; kanji is a gold accent above at 10px/.18em. Remove the kanji and nothing is lost.</p>
+      </div>
+      <div class="specimen">
+        <div style="font-size:15px">Deals 280% INT as fire damage to all enemies in range.</div>
+        <p style="font-size:11px;color:var(--ink-3);margin-top:10px">UI sans for every functional label. Body never below 16px in the real build; 15px here is the compact HUD variant.</p>
+      </div>
+      <div class="specimen">
+        <div class="num" style="font-size:22px; color:var(--ink)">120 / 200 &nbsp; 1,250 &nbsp; 02:45</div>
+        <p style="font-size:11px;color:var(--ink-3);margin-top:10px">Tabular-lining numerals so counters never jitter. The mockup's stat numerals are a sans, not a serif.</p>
+      </div>
+
+      <div style="font-family:var(--display); color:var(--gold); margin:var(--s5) 0 var(--s3)">Expression atlas — 24 tiles, 181&times;210</div>
+      <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:6px">
+        <img src="atlas/hikari-neutral.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/hikari-happy.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/hikari-profile.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/hikari-worried.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/hikari-shout.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/hikari-calm.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/aoi-neutral.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/aoi-happy.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/aoi-profile.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/aoi-worried.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/aoi-shout.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/aoi-calm.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/kai-neutral.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/kai-happy.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/kai-profile.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/kai-worried.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/kai-shout.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/kai-calm.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/takumi-neutral.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/takumi-happy.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/takumi-profile.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/takumi-worried.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/takumi-shout.png" style="width:100%;border:var(--hair);border-radius:2px">
+        <img src="atlas/takumi-calm.png" style="width:100%;border:var(--hair);border-radius:2px">
+      </div>
+      <p style="font-size:11px;color:var(--ink-3);margin-top:12px;line-height:1.6;max-width:64ch">
+        Rows: neutral, happy, profile / worried, shout, calm. Tiles keep their painted backgrounds
+        and their gold frame — framing them is cheaper than alpha matting and reads as a character
+        dossier, which is what the source sheet is. This grid doubles as the T37 verification route.</p>
+
+      <div style="font-family:var(--display); color:var(--gold); margin:var(--s5) 0 var(--s3)">Spacing &amp; radii</div>
+      <div style="display:flex; gap:var(--s3); align-items:flex-end">
+        <div style="text-align:center"><div style="width:4px;height:34px;background:var(--gold)"></div><code style="font-size:10px;color:var(--ink-3)">4</code></div>
+        <div style="text-align:center"><div style="width:8px;height:34px;background:var(--gold)"></div><code style="font-size:10px;color:var(--ink-3)">8</code></div>
+        <div style="text-align:center"><div style="width:12px;height:34px;background:var(--gold)"></div><code style="font-size:10px;color:var(--ink-3)">12</code></div>
+        <div style="text-align:center"><div style="width:16px;height:34px;background:var(--gold)"></div><code style="font-size:10px;color:var(--ink-3)">16</code></div>
+        <div style="text-align:center"><div style="width:24px;height:34px;background:var(--gold)"></div><code style="font-size:10px;color:var(--ink-3)">24</code></div>
+        <div style="text-align:center"><div style="width:32px;height:34px;background:var(--gold)"></div><code style="font-size:10px;color:var(--ink-3)">32</code></div>
+        <div style="text-align:center"><div style="width:48px;height:34px;background:var(--gold)"></div><code style="font-size:10px;color:var(--ink-3)">48</code></div>
+        <div style="margin-left:24px; display:flex; gap:12px">
+          <div style="width:54px;height:34px;border:var(--hair);border-radius:3px"><code style="font-size:9px;color:var(--ink-3);display:block;text-align:center;line-height:34px">3px</code></div>
+          <div style="width:54px;height:34px;border:var(--hair);border-radius:8px"><code style="font-size:9px;color:var(--ink-3);display:block;text-align:center;line-height:34px">8px</code></div>
+        </div>
+      </div>
+      <p style="font-size:11px;color:var(--ink-3);margin-top:14px;line-height:1.6;max-width:64ch">
+        Exactly two radii. Gold hairline is 1px — at 2x DPR it must stay 1 <em>device</em> pixel,
+        not 1 CSS pixel, or the whole UI thickens and loses its engraved quality.</p>
+
+    </div>
+  </div>
+
+</div>
+</div>
+</body>
+</html>
