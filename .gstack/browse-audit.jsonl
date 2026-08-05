@@ -57,3 +57,60 @@
 {"ts":"2026-08-05T08:56:10.317Z","cmd":"goto","args":"http://localhost:5199/src/render/__harness.html","origin":"http://localhost:5199/src/render/__harness.html","durationMs":103,"status":"ok","hasCookies":false,"mode":"launched"}
 {"ts":"2026-08-05T08:56:14.371Z","cmd":"console","args":"--errors","origin":"http://localhost:5199/src/render/__harness.html","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
 {"ts":"2026-08-05T08:56:14.462Z","cmd":"screenshot","args":"--viewport /tmp/harness.png","origin":"http://localhost:5199/src/render/__harness.html","durationMs":49,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:53:36.783Z","cmd":"status","args":"","origin":"about:blank","durationMs":2,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:53:44.164Z","cmd":"goto","args":"http://localhost:5174/","origin":"http://localhost:5174/","durationMs":333,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:53:44.204Z","cmd":"console","args":"--errors","origin":"http://localhost:5174/","durationMs":1,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:53:44.771Z","cmd":"snapshot","args":"-i -a -o .gstack/qa-reports/screenshots/01-title.png","origin":"http://localhost:5174/","durationMs":531,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:53:54.720Z","cmd":"click","args":"@e1","origin":"http://localhost:5174/","durationMs":51,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:53:54.756Z","cmd":"console","args":"--errors","origin":"http://localhost:5174/","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:53:54.857Z","cmd":"snapshot","args":"-i -a -o .gstack/qa-reports/screenshots/02-stage-select.png","origin":"http://localhost:5174/","durationMs":67,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:54:01.481Z","cmd":"click","args":"@e2","origin":"http://localhost:5174/","durationMs":21,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:54:01.517Z","cmd":"console","args":"--errors","origin":"http://localhost:5174/","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:54:01.553Z","cmd":"snapshot","args":"-i -a -o .gstack/qa-reports/screenshots/03-after-stage1-click.png","origin":"http://localhost:5174/","durationMs":2,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:54:14.555Z","cmd":"screenshot","args":".gstack/qa-reports/screenshots/03-after-stage1-click.png","origin":"http://localhost:5174/","durationMs":52,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:54:14.593Z","cmd":"console","args":"","origin":"http://localhost:5174/","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:57:46.369Z","cmd":"goto","args":"http://localhost:5174/","origin":"http://localhost:5174/","durationMs":23,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:57:46.409Z","cmd":"click","args":"@e1","origin":"http://localhost:5174/","durationMs":1,"status":"error","hasCookies":false,"mode":"launched","error":"Ref @e1 not found. Run 'snapshot' to get fresh refs."}
+{"ts":"2026-08-05T14:57:46.441Z","cmd":"click","args":"@e2","origin":"http://localhost:5174/","durationMs":0,"status":"error","hasCookies":false,"mode":"launched","error":"Ref @e2 not found. Run 'snapshot' to get fresh refs."}
+{"ts":"2026-08-05T14:57:47.500Z","cmd":"console","args":"--errors","origin":"http://localhost:5174/","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:57:47.662Z","cmd":"snapshot","args":"-i -a -o .gstack/qa-reports/screenshots/04-stage1-fixed.png","origin":"http://localhost:5174/","durationMs":122,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:58:13.866Z","cmd":"goto","args":"http://localhost:5174/","origin":"http://localhost:5174/","durationMs":20,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:58:13.906Z","cmd":"console","args":"--clear","origin":"http://localhost:5174/","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:58:13.950Z","cmd":"snapshot","args":"-i","origin":"http://localhost:5174/","durationMs":7,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:58:18.543Z","cmd":"click","args":"@e1","origin":"http://localhost:5174/","durationMs":13,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:58:18.583Z","cmd":"snapshot","args":"-i","origin":"http://localhost:5174/","durationMs":3,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:58:24.917Z","cmd":"click","args":"@e2","origin":"http://localhost:5174/","durationMs":21,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:58:25.984Z","cmd":"console","args":"--errors","origin":"http://localhost:5174/","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T14:58:26.110Z","cmd":"snapshot","args":"-i -a -o .gstack/qa-reports/screenshots/04-stage1-fixed.png","origin":"http://localhost:5174/","durationMs":88,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:01:18.220Z","cmd":"goto","args":"http://localhost:5174/","origin":"http://localhost:5174/","durationMs":21,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:01:18.267Z","cmd":"snapshot","args":"-i","origin":"http://localhost:5174/","durationMs":9,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:01:23.719Z","cmd":"click","args":"@e1","origin":"http://localhost:5174/","durationMs":17,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:01:23.757Z","cmd":"snapshot","args":"-i","origin":"http://localhost:5174/","durationMs":2,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:01:29.398Z","cmd":"click","args":"@e2","origin":"http://localhost:5174/","durationMs":14,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:01:30.464Z","cmd":"console","args":"--errors","origin":"http://localhost:5174/","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:01:30.615Z","cmd":"snapshot","args":"-i -a -o .gstack/qa-reports/screenshots/05-battle-affordable.png","origin":"http://localhost:5174/","durationMs":113,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:02:06.098Z","cmd":"press","args":"1","origin":"http://localhost:5174/","durationMs":4,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:02:06.135Z","cmd":"press","args":"ArrowRight","origin":"http://localhost:5174/","durationMs":2,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:02:06.169Z","cmd":"press","args":"ArrowRight","origin":"http://localhost:5174/","durationMs":1,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:02:06.205Z","cmd":"press","args":"Enter","origin":"http://localhost:5174/","durationMs":3,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:02:06.760Z","cmd":"console","args":"--errors","origin":"http://localhost:5174/","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:02:06.873Z","cmd":"screenshot","args":".gstack/qa-reports/screenshots/06-placed-tower.png","origin":"http://localhost:5174/","durationMs":75,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:03:05.399Z","cmd":"snapshot","args":"-i","origin":"http://localhost:5174/","durationMs":4,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:03:05.515Z","cmd":"screenshot","args":".gstack/qa-reports/screenshots/07-stuck-at-wave0.png","origin":"http://localhost:5174/","durationMs":78,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:24.774Z","cmd":"goto","args":"http://localhost:5174/","origin":"http://localhost:5174/","durationMs":22,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:24.812Z","cmd":"click","args":"@e1","origin":"http://localhost:5174/","durationMs":0,"status":"error","hasCookies":false,"mode":"launched","error":"Ref @e1 not found. Run 'snapshot' to get fresh refs."}
+{"ts":"2026-08-05T15:05:25.184Z","cmd":"snapshot","args":"-i","origin":"http://localhost:5174/","durationMs":11,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:32.105Z","cmd":"click","args":"@e1","origin":"http://localhost:5174/","durationMs":22,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:32.144Z","cmd":"snapshot","args":"-i","origin":"http://localhost:5174/","durationMs":3,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:37.701Z","cmd":"click","args":"@e2","origin":"http://localhost:5174/","durationMs":13,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:38.269Z","cmd":"press","args":"1","origin":"http://localhost:5174/","durationMs":2,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:38.309Z","cmd":"press","args":"ArrowRight","origin":"http://localhost:5174/","durationMs":2,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:38.345Z","cmd":"press","args":"ArrowRight","origin":"http://localhost:5174/","durationMs":1,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:38.380Z","cmd":"press","args":"Enter","origin":"http://localhost:5174/","durationMs":2,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:38.416Z","cmd":"snapshot","args":"-i","origin":"http://localhost:5174/","durationMs":3,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:47.935Z","cmd":"click","args":"@e1","origin":"http://localhost:5174/","durationMs":14,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:47.972Z","cmd":"console","args":"--errors","origin":"http://localhost:5174/","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:51.032Z","cmd":"snapshot","args":"-i","origin":"http://localhost:5174/","durationMs":3,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:05:51.143Z","cmd":"screenshot","args":".gstack/qa-reports/screenshots/08-wave1-running.png","origin":"http://localhost:5174/","durationMs":75,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:06:19.652Z","cmd":"console","args":"--errors","origin":"http://localhost:5174/","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-08-05T15:06:19.779Z","cmd":"screenshot","args":".gstack/qa-reports/screenshots/09-wave1-progress.png","origin":"http://localhost:5174/","durationMs":89,"status":"ok","hasCookies":false,"mode":"launched"}
