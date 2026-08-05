@@ -31,7 +31,13 @@ import { advanceEnemy, applySlow, hasLeaked } from "./enemies";
 import { appliesSlow } from "./rules/elements";
 import { ENEMY_DEFS } from "../data/enemies";
 import { MAGE_DEFS } from "../data/mages";
-import { MANA_CAP, MANA_REGEN_PER_SEC, STARTING_MANA } from "../data/economy";
+import {
+  MANA_CAP,
+  MANA_REGEN_PER_SEC,
+  SELL_REFUND_RATE,
+  SKIP_INTERWAVE_BONUS_MANA,
+  STARTING_MANA,
+} from "../data/economy";
 
 /** World units/sec projectiles close on their target. Fast enough to feel hitscan-ish
  * at stage1's tower ranges (100-135) while still existing as a moving thing to draw. */
@@ -39,8 +45,6 @@ const PROJECTILE_SPEED = 700;
 /** Safety net: a projectile whose target keeps dodging (shouldn't happen — enemies
  * don't strafe) expires rather than living forever. */
 const PROJECTILE_MAX_AGE = 3;
-/** Towers sell for half of everything spent reaching their current tier. */
-const SELL_REFUND_RATE = 0.5;
 
 function isTerminalPhase(phase: SimState["phase"]): boolean {
   return phase === "victory" || phase === "defeat" || phase === "crashed";
@@ -177,6 +181,10 @@ export function applyCommand(state: SimState, stage: StageDef, path: Path, cmd: 
         events.push(reject("wrongPhase"));
         break;
       }
+      // The overlay advertises "skip early for +N mana" (InterwaveOverlay.tsx) — this
+      // used to be pure UI copy with nothing behind it; skipping paid out exactly the
+      // same as waiting out the timer.
+      state.mana = Math.min(state.manaCap, state.mana + SKIP_INTERWAVE_BONUS_MANA);
       beginWaveNow(state, stage, events);
       break;
     }

@@ -16,6 +16,7 @@ import { MAX_CONCURRENT_ENEMIES } from "./types";
 import { buildPath } from "./path";
 import { applyCommand, createSim, step } from "./sim";
 import { STAGE1 } from "../data/stage1";
+import { SKIP_INTERWAVE_BONUS_MANA } from "../data/economy";
 
 const DT = 1 / 60;
 
@@ -120,5 +121,43 @@ describe("sim enemy concurrency cap (T38)", () => {
     // No towers were placed, so every removed enemy was removed via a leak, never a kill.
     expect(state.kills).toBe(0);
     expect(state.waveSpawnQueue.length + state.enemies.length + state.leaks).toBe(total);
+  });
+});
+
+describe("sim skipInterwave bonus mana (regression)", () => {
+  // Regression: skipInterwave used to call beginWaveNow() and nothing else — the
+  // overlay's "skip early for +30 mana" button paid out exactly the same as waiting
+  // out the countdown. Found by /qa (browser repro of "game doesn't run after
+  // pressing the 1st stage") while tracing the interwave/wave-start codepath.
+  it("skipping the interwave grants the advertised bonus, not just an early beginWaveNow", () => {
+    const stage: StageDef = {
+      id: "skiptest",
+      name: "t",
+      nameJa: "t",
+      cols: 7,
+      rows: 12,
+      path: [
+        { x: 3, y: 0 },
+        { x: 3, y: 11 },
+      ],
+      sockets: [],
+      // Two short waves: wave 1 drains fast (no towers — its lone shade leaks) and
+      // there's a wave 2 for the sim to land in "interwave" rather than "victory".
+      waves: [
+        { delay: 1, entries: [{ kind: "shade", count: 1, spacing: 1 }] },
+        { delay: 1, entries: [{ kind: "shade", count: 1, spacing: 1 }] },
+      ],
+    };
+    const path = buildPath(stage);
+    const state = createSim(stage.id, stage, 1);
+    applyCommand(state, stage, path, { t: "startWave" });
+    for (let i = 0; i < 6000 && state.phase !== "interwave"; i++) step(state, stage, path, DT);
+    expect(state.phase).toBe("interwave");
+
+    const manaBeforeSkip = state.mana;
+    applyCommand(state, stage, path, { t: "skipInterwave" });
+
+    expect(state.phase).toBe("running");
+    expect(state.mana).toBe(Math.min(state.manaCap, manaBeforeSkip + SKIP_INTERWAVE_BONUS_MANA));
   });
 });

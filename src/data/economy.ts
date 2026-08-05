@@ -37,6 +37,23 @@ export const STARTING_MANA = 80;
 export const MANA_CAP = 180;
 export const MANA_REGEN_PER_SEC = 1.2;
 
+/**
+ * Towers sell for half of everything spent reaching their current tier. Shared between
+ * game/sim.ts (which actually pays this out) and ui/data/mageFixtures.ts (which prints
+ * the SELL button's refund amount) so the two can't drift — they used to: the sim paid
+ * 0.5 while the UI displayed a refund computed at 0.6.
+ */
+export const SELL_REFUND_RATE = 0.5;
+
+/**
+ * Mana granted for skipping an interwave breather early. Shared between game/sim.ts
+ * (which pays it out) and ui/components/InterwaveOverlay.tsx (which advertises it on
+ * the skip button) for the same reason SELL_REFUND_RATE is here — sim.ts's
+ * "skipInterwave" command used to not grant this at all, while the button promised
+ * "+30 mana" unconditionally.
+ */
+export const SKIP_INTERWAVE_BONUS_MANA = 30;
+
 /** Kill bounties, derived alongside the constants above. Consumed by data/enemies.ts. */
 export const BOUNTIES: Record<EnemyKind, number> = {
   shade: 4,
