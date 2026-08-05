@@ -20,7 +20,7 @@ import type {
   StageDef,
   Tower,
 } from "./types";
-import { MAX_LEAKS, starsForLeaks } from "./types";
+import { MAX_CONCURRENT_ENEMIES, MAX_LEAKS, starsForLeaks } from "./types";
 import { cellCentre } from "./layout";
 import type { Path } from "./path";
 import { pathLength, positionAt } from "./path";
@@ -211,10 +211,16 @@ export function step(state: SimState, stage: StageDef, path: Path, dt: number): 
   const waveDef = stage.waves[state.wave];
   if (!waveDef) return events; // invariant: wave index always valid once running
 
-  // 1. Spawn enemies from the queue.
+  // 1. Spawn enemies from the queue. Stalls (queue backs up, nothing is dropped) once
+  // MAX_CONCURRENT_ENEMIES are alive at once — the cap the naive O(towers*enemies)
+  // targeting scan in towers.ts is sized against (TODOS.md #4).
   state.spawnTimer -= dt;
   const totalWaveCount = waveEnemyCount(waveDef);
-  while (state.spawnTimer <= 0 && state.waveSpawnQueue.length > 0) {
+  while (
+    state.spawnTimer <= 0 &&
+    state.waveSpawnQueue.length > 0 &&
+    state.enemies.length < MAX_CONCURRENT_ENEMIES
+  ) {
     const spawnedBefore = totalWaveCount - state.waveSpawnQueue.length;
     const kind = state.waveSpawnQueue.shift();
     if (!kind) break;

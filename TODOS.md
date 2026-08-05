@@ -109,8 +109,11 @@ frame budget.
 **Cons:** Pure premature optimization at current scale. Adds a spatial structure to keep in
 sync with entity movement, which is a classic source of subtle targeting bugs.
 
-**Context:** The enemy cap lives in wave data, not code. If a wave ever needs to exceed 60,
-this is the unlock. Until then, leave it.
+**Context:** The enemy cap is `MAX_CONCURRENT_ENEMIES` in `game/types.ts` (60), enforced by
+`sim.ts` stalling its spawn queue rather than dropping entries (PLAN.md Phase 3 T38). It
+lives in code, not wave data — if a wave ever needs more than 60 concurrent enemies, raise
+that constant (which then makes this spatial-hash item real work, not speculative). Until
+then, leave it.
 
 **Effort:** S (human) → S (with Claude Code)
 **Priority:** P3

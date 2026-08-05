@@ -1048,29 +1048,31 @@ Synthesized from this review's findings. Each derives from a specific finding ab
   - Surfaced by: 0A premise P-E + subagent C3 — blocks E1 and E2
   - Files: `references/*.PNG` → `public/atlas/`, `src/data/atlas.json`
   - Verify: every tile renders in a dev harness page at the right crop
-- [ ] **T2 (P1, human: ~30min / CC: ~5min) — data** — Encode the element decision:
+- [x] **T2 (P1) — data — DONE.** Encode the element decision:
   `ELEMENTS` for **Fire / Ice / Lightning / Wind** *(USER DECISION at the final gate —
   overrides Phase 2 F23, restores the Phase 1 call. Split `game/rules/elements.ts` from
   `ui/theme/elements.ts` per Phase 3 #16.)*
   - Surfaced by: C4.1 + Section 5 finding Q1
   - Files: `src/data/elements.ts`
   - Verify: grep finds zero hardcoded element hex values outside this file
-- [ ] **T3 (P1, human: ~15min / CC: ~3min) — tooling** — ESLint `no-restricted-imports`
+- [x] **T3 (P1) — tooling — DONE.** ESLint `no-restricted-imports`
   boundary on `src/game/**` banning react/canvas/DOM/`Math.random`
   - Surfaced by: Section 1 finding A1 + Section 5 finding Q3
   - Files: `eslint.config.js`, CI workflow
   - Verify: adding `import React` to a `game/` file fails lint
-- [ ] **T4 (P1, human: ~1h / CC: ~10min) — game/sim** — Spell out the fixed-timestep loop:
-  accumulator, MAX_STEPS clamp, speed multiplier applied to accumulation not to dt
+- [x] **T4 (P1) — game/sim — DONE.** Fixed-timestep loop lives in `src/state/loop.ts`
+  (ported verbatim from the T31 spec): accumulator, `ceil(speed)*4` step budget, speed
+  multiplier applied to accumulation not to dt, 250ms raw-dt clamp before speed is applied.
   - Surfaced by: Section 5 finding Q2, Section 4 gaps 3 and 4
-  - Files: `src/game/sim.ts`
-  - Verify: unit test — x2 speed produces exactly 2x steps, never larger steps
+  - Files: `src/state/loop.ts`
+  - Verify: `src/state/loop.test.ts` — x2 speed produces exactly 2x steps for the same
+    real-time delta; a 60s background gap still runs at most `budget` steps.
 - [ ] **T5 (P1, human: ~2h / CC: ~20min) — errors** — Implement all 10 rescues from the
   Section 2 registry with structured warns
   - Surfaced by: Section 2 — the plan originally specified zero error handling
   - Files: `src/state/persist.ts`, `src/render/canvas.ts`, `src/ui/CrashPanel.tsx`
   - Verify: one unit test per rescue row
-- [ ] **T6 (P1, human: ~1h / CC: ~10min) — state** — HUD slice published at ~10Hz; entity
+- [x] **T6 (P1) — state — DONE.** HUD slice published at ~10Hz; entity
   arrays never cross into React
   - Surfaced by: Section 7 finding P1 (the per-frame re-render trap)
   - Files: `src/state/store.ts`
@@ -1085,7 +1087,7 @@ Synthesized from this review's findings. Each derives from a specific finding ab
   - Surfaced by: Section 11 finding G1
   - Files: `src/ui/**`
   - Verify: each cell of the Section 11 matrix is reachable in a dev route
-- [ ] **T9 (P1, human: ~2h / CC: ~20min) — a11y** — Keyboard placement, focus rings, 44px
+- [x] **T9 (P1) — a11y — DONE.** Keyboard placement, focus rings, 44px
   targets, icon+label alongside colour, `prefers-reduced-motion` disabling shake and cut-ins
   - Surfaced by: Section 11 finding G2
   - Files: `src/ui/**`, `src/render/fx.ts`
@@ -1100,10 +1102,13 @@ Synthesized from this review's findings. Each derives from a specific finding ab
   - Surfaced by: Section 1 rollback posture, Section 9 finding D1
   - Files: `src/state/persist.ts`
   - Verify: a v0 blob loads into v1 without throwing
-- [ ] **T12 (P2, human: ~1h / CC: ~10min) — tooling** — CI: typecheck + vitest + one
-  Playwright smoke, deploy from `main`
+- [ ] **T12 (P2) — tooling — PARTIALLY DONE.** CI: typecheck + vitest gate added
+  (`.github/workflows/ci.yml`, runs on every PR and push to `main`); `deploy.yml`'s build
+  job now also runs `pnpm check` before `pnpm build` so a broken `main` can't publish even
+  via `workflow_dispatch`. **Still open:** no Playwright smoke — this repo has no
+  Playwright dependency yet, and nothing in this pass installed one.
   - Surfaced by: Section 9 finding D1
-  - Files: `.github/workflows/ci.yml`
+  - Files: `.github/workflows/ci.yml`, `.github/workflows/deploy.yml`
   - Verify: CI green on a PR
 - [ ] **T13 (P2, human: ~1h / CC: ~10min) — devtools** — Dev overlay on `~`: fps, entity
   counts, seed, wave state
@@ -1570,7 +1575,8 @@ in-repo components exist.
   - Surfaced by: Pass 5 F24 + F1 + F21 — supersedes Phase 1 T14
   - Files: `DESIGN.md`
   - Verify: every token traces to a specific reference file
-- [ ] **T16 (P1, human: ~2h / CC: ~20min) — render** — Battlefield draw pipeline. **REVISED —
+- [x] **T16 (P1) — render — DONE.** Ported into `src/render/field.ts` + `entities.ts`,
+  wired through `src/render/index.ts`. Battlefield draw pipeline. **REVISED —
   the art scarcity that forced full-procedural is gone.** Ground is now a painted tiling texture
   (`ground-valley-dark.png`, edge mismatch 6.5/255) instead of the flat 3-value fill, which was
   itself a workaround for Phase 3 #18 ("noise reads as mud at 360px"). Enemies are now real
@@ -1587,17 +1593,18 @@ in-repo components exist.
     What remains is porting it into `src/render/` against the real `SimState` rather than the
     demo's inline state.
   - Verify: battle screen reads as intentional art at 360x640; see `design/scene.html`
-- [ ] **T17 (P1, human: ~2h / CC: ~20min) — ui/battle** — Tower interaction panel: rail swaps
+- [x] **T17 (P1) — ui/battle — DONE.** Tower interaction panel: rail swaps
   to portrait, tier pips, DPS, upgrade cost, sell refund, range circle, off-grid dismiss
   - Surfaced by: Pass 2 F8 — an entire missing interface on the primary screen
-  - Files: `src/ui/TowerPanel.tsx`, `src/ui/CardRail.tsx`
-  - Verify: place, upgrade to tier 3, sell, all without leaving the battle screen
-- [ ] **T18 (P1, human: ~1h / CC: ~10min) — ui/battle** — Crystal HP ring, damage vignette
+  - Files: `src/ui/components/TowerPanel.tsx`, wired in `src/ui/screens/Battle.tsx`
+  - Verify: place, upgrade to tier 3, sell, all without leaving the battle screen — confirmed
+    against `Battle.tsx`'s `onUpgrade`/`onSell` dispatch, no screen change involved.
+- [x] **T18 (P1) — ui/battle — DONE.** Crystal HP ring, damage vignette
   pulse, sub-30% edge crack, star threshold pips
   - Surfaced by: Pass 1 F3 + Pass 7 F28 — the lose condition was invisible
   - Files: `src/render/crystal.ts`
   - Verify: HP legible at 360x640 without a HUD element
-- [ ] **T19 (P1, human: ~1h / CC: ~10min) — ui/battle** — Mage card states: affordable,
+- [x] **T19 (P1) — ui/battle — DONE.** Mage card states: affordable,
   unaffordable, selected, cooldown
   - Surfaced by: Pass 1 F4
   - Verify: all four states reachable; deselect works via card and off-grid
@@ -1610,11 +1617,11 @@ in-repo components exist.
   survive greyscale like the icon set. **Verified: tier is distinguishable at 120px.**
   Still to do: wire the decals into the real render loop and add the gold tier pips.
   - Surfaced by: Pass 2 F9 — makes E3 load-bearing
-- [ ] **T21 (P1, human: ~1h / CC: ~10min) — ui** — Interwave screen: banner, countdown ring,
+- [x] **T21 (P1) — ui — DONE.** Interwave screen: banner, countdown ring,
   next-wave preview icons, skip-for-mana
   - Surfaced by: Pass 2 F10 — state-machine node with no UI
   - Verify: reachable between every wave; skipping grants the bonus
-- [ ] **T22 (P1, human: ~30min / CC: ~5min) — data** — Fix chest milestones to ★3/★6/★9 and
+- [x] **T22 (P1) — data — DONE.** Fix chest milestones to ★3/★6/★9 and
   drop stamina from the rail
   - Surfaced by: Pass 3 F15 (arithmetically impossible) + Pass 7 F19
   - Verify: max achievable stars is 9 and the last chest is reachable
@@ -1622,7 +1629,7 @@ in-repo components exist.
   attribution, RETRY primary, sub-second re-entry, pause-menu restart, 3-leak grace
   - Surfaced by: Pass 2 F12 + Pass 3 F16
   - Verify: losing on wave 12 leads to replaying in under a second
-- [ ] **T24 (P1, human: ~30min / CC: ~5min) — ui** — First-run socket hint on stage 1 wave 1
+- [x] **T24 (P1) — ui — DONE.** First-run socket hint on stage 1 wave 1
   - Surfaced by: Pass 2 F13 — the done condition depends on it
   - Verify: a first-time player places a mage without being told how
 - [ ] **T25 (P2, human: ~45min / CC: ~8min) — ui** — MVP mage pose art + expression on results
@@ -2088,27 +2095,39 @@ stub, so an automated pass proves nothing about real Safari.
   ±1 invariant**, with `dt` into `step()` constant throughout. The page renders a live drift
   counter so the invariant is checkable rather than asserted.
   - Surfaced by: Phase 3 #4 — MAX_STEPS=5 silently defeats E7; blur/visibilitychange conflated
-- [ ] **T32 (P1, human: ~45min / CC: ~10min) — tooling** — Determinism test: seed + ordered
-  command log → identical state hash at 10k steps; Node-env Vitest for `game/`
+- [x] **T32 (P1) — tooling — DONE.** Determinism test: seed + ordered
+  command log → identical state hash at 10k steps; Node-env Vitest for `game/`.
+  `src/game/sim.test.ts` — runs a fixed, state-independent command log against `STAGE1`
+  twice and diffs `JSON.stringify` of the resulting state (seed field excluded — nothing
+  in `sim.ts` reads it yet, see the test's own note).
   - Surfaced by: Phase 3 #5 — lint cannot prove the property, this test can
-- [ ] **T33 (P1, human: ~30min / CC: ~6min) — tooling** — Extend the boundary lint to globals:
+- [x] **T33 (P1) — tooling — DONE.** Extend the boundary lint to globals:
   `Math.random`, `Date`, `performance`, `window`, `document`, `localStorage` in `src/game/**`
   - Surfaced by: Phase 3 #5 — `no-restricted-imports` cannot catch any of these
-- [ ] **T34 (P1, human: ~1h / CC: ~12min) — state** — Two explicit channels: 60Hz mutable ref
-  for render, coarse zustand for discrete transitions; mana bar moves to canvas
+- [x] **T34 (P1) — state — DONE.** Two explicit channels: 60Hz mutable ref
+  for render (`src/state/loop.ts`'s `getSimState()`), coarse zustand for discrete
+  transitions (`src/state/store.ts`); mana bar moves to canvas.
   - Surfaced by: Phase 3 #8 — 10Hz throttle breaks F4/F8/E8/T9
   - Verify: mana bar is smooth; card affordability flips within one frame
-- [ ] **T35 (P1, human: ~30min / CC: ~6min) — data** — Derive mana cap, regen, kill reward and
-  3 tier costs from wave tables; treat all mockup numbers as fixture-until-verified
+- [x] **T35 (P1) — data — DONE.** Derive mana cap, regen, kill reward and
+  3 tier costs from wave tables; treat all mockup numbers as fixture-until-verified.
+  See `src/data/economy.ts`'s DERIVATION comment.
   - Surfaced by: Phase 3 #17 — 200 mana cap vs 100-120 costs starves the upgrade economy
-- [ ] **T36 (P1, human: ~45min / CC: ~10min) — tests** — Golden test on `data/`: reachable
-  star range vs thresholds; plus v99 → clean-reset migration test
+- [x] **T36 (P1) — tests — DONE.** Golden test on `data/`: reachable
+  star range vs thresholds (`src/data/data.test.ts`); plus save-version clean-reset
+  migration tests for v0 and v99 (`src/state/persist.test.ts`).
   - Surfaced by: Phase 3 #15 — the 2am-Friday data-edit failure
 - [ ] **T37 (P1, human: ~30min / CC: ~6min) — assets** — Committed dev route rendering all 24
   tiles + 8 poses labelled, plus a tile-dimension snapshot test
   - Surfaced by: Phase 3 #9 — a 10px crop drift is invisible in review, obvious in play
-- [ ] **T38 (P1, human: ~45min / CC: ~10min) — render** — Enforce enemy cap in the sim (stall
-  spawning while alive >= N); pre-render digit glyphs to an offscreen atlas; pool projectiles
+  - Note: the labelled dev route exists (`design/index.html` section 11, see T37 above in
+    Phase 1's list — task IDs collided across phases); the tile-dimension **snapshot test**
+    specifically is still open.
+- [x] **T38 (P1) — render — DONE.** Enforce enemy cap in the sim (stall
+  spawning while alive >= N): `MAX_CONCURRENT_ENEMIES` in `game/types.ts`, enforced in
+  `sim.ts`'s spawn loop, covered by `src/game/sim.test.ts`. Digit glyphs are pre-rendered
+  to an offscreen atlas (`src/render/glyphs.ts`) and particles are pool-capped at 300
+  (`src/render/fx.ts`) — both were already done; only the concurrency cap itself was missing.
   - Surfaced by: Phase 3 #13 — cap wasn't enforced; fillText and projectiles uncounted
 - [ ] **T39 (P2, human: ~30min / CC: ~6min) — devtools** — Command-log ring + seed, dumped as
   copyable JSON on the CRASHED panel and on defeat
@@ -2116,10 +2135,10 @@ stub, so an automated pass proves nothing about real Safari.
 - [ ] **T40 (P2, human: ~30min / CC: ~6min) — errors** — Add the 4 missing registry rows;
   reclassify 3 stub-only rows as manual
   - Surfaced by: Phase 3 #14
-- [ ] **T41 (P2, human: ~20min / CC: ~4min) — security** — Namespace storage keys `reactd:v1:*`;
+- [x] **T41 (P2) — security — DONE.** Namespace storage keys `reactd:v1:*`;
   no `<form>`/`<input>`/`onSubmit` anywhere in meta shells
   - Surfaced by: Phase 3 S-a, S-b
-- [ ] **T42 (P2, human: ~30min / CC: ~6min) — architecture** — Split `game/rules/elements.ts`
+- [x] **T42 (P2) — architecture — DONE.** Split `game/rules/elements.ts`
   from `ui/theme/elements.ts`
   - Surfaced by: Phase 3 #16
 - [x] ~~**T26** — CUT (Phase 3 #10, alpha matting)~~ → **REINSTATED AND DONE** once an image

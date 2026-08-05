@@ -20,6 +20,14 @@ export const DT = 1 / 60;
 /** Discrete leaks, not continuous crystal HP. The 4th leak is defeat. */
 export const MAX_LEAKS = 3;
 
+/**
+ * Hard cap on concurrently alive enemies. Spawning stalls (queue backs up, does not
+ * drop entries) once state.enemies.length reaches this. Recorded in TODOS.md #4 as the
+ * reason the naive all-pairs targeting scan in towers.ts is fine at this scale — that
+ * reasoning only holds if this cap is actually enforced (sim.ts step(), phase 1).
+ */
+export const MAX_CONCURRENT_ENEMIES = 60;
+
 export type Vec2 = { x: number; y: number };
 
 // ---------------------------------------------------------------- content
