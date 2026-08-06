@@ -180,6 +180,12 @@ body {
 /* ---------- battle field + bottom rail ---------- */
 .field {
   flex: 1; position: relative; background: #101c14; overflow: hidden; min-height: 0;
+  /* The canvas is letterboxed to WORLD_W:WORLD_H inside render/canvas.ts's resize() —
+     it will not always exactly fill this box (this box's own aspect ratio moves with
+     viewport width/height; the canvas's does not). Centering means any leftover strip
+     of this element's own background splits evenly left/right instead of landing
+     entirely on one side, which read as the canvas having "shifted". */
+  display: flex; align-items: center; justify-content: center;
 }
 .field canvas { display: block; width: 100%; height: 100%; }
 
@@ -203,7 +209,14 @@ body {
 .bottom {
   background: linear-gradient(180deg, rgba(16, 24, 48, 0.96), var(--bg));
   border-top: var(--hair); padding: var(--s3) var(--s3) var(--s4); flex: 0 0 auto;
+  /* Both children (rail + towerpanel slots) are always rendered and placed in this
+     same cell — a CSS grid track sizes to its tallest item even when that item is
+     visibility:hidden, so this reserves space for whichever is taller. That keeps
+     .bottom's height (and therefore .field's, since it's flex:1 above this) constant
+     across a tower selection instead of resizing the whole battle screen. */
+  display: grid;
 }
+.bottom-slot { grid-area: 1 / 1; }
 
 .rail { display: flex; gap: var(--s2); }
 .card {

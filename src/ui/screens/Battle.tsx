@@ -10,17 +10,26 @@ import { MageCard, type MageCardState } from "../components/MageCard";
 import { TopBar } from "../components/TopBar";
 import { TowerPanel } from "../components/TowerPanel";
 import { MAGE_FIXTURES } from "../data/mageFixtures";
+import { SKIP_INTERWAVE_BONUS_MANA } from "../../data/economy";
 
 const SPEED_CYCLE: readonly SpeedOption[] = [1, 1.5, 2, 4];
 const ELEMENT_ORDER: readonly ElementId[] = ["fire", "ice", "lightning", "wind"];
 const CARD_COOLDOWN_MS = 350;
 
+/**
+ * Builds the RendererLike adapter for a given canvas. Injected by App (which knows the
+ * active StageDef) rather than imported here, so Battle stays free of render/'s and
+ * state/integration.ts's concrete shapes — see App.tsx for why this is a factory Battle
+ * calls, rather than a pre-built instance App hands down (that used to deadlock: the
+ * renderer needed a canvas that only existed once Battle had mounted, and Battle's own
+ * mount was gated on the renderer already existing).
+ */
+export type RendererFactory = (canvas: HTMLCanvasElement) => { renderer: RendererLike; destroy(): void };
+
 export type BattleProps = {
   engine: SimEngine;
-  renderer: RendererLike;
+  createRenderer: RendererFactory;
   createInitialState: (stageId: string, totalWaves: number, seed: number) => SimState;
-  /** Ref-callback used by App to construct the renderer adapter on mount. */
-  canvasRef?: (canvas: HTMLCanvasElement | null) => void;
 };
 
 /**
@@ -29,9 +38,10 @@ export type BattleProps = {
  * src/state/store.ts), and reads the 60Hz SimState ref only for one-off, event-driven
  * things (click hit-testing), never as a React subscription.
  */
-export function Battle({ engine, renderer, createInitialState, canvasRef: appCanvasRef }: BattleProps) {
+export function Battle({ engine, createRenderer, createInitialState }: BattleProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const loopRef = useRef<GameLoop | null>(null);
+  const destroyRendererRef = useRef<(() => void) | null>(null);
   const dmgByElement = useRef<Record<ElementId, number>>({ fire: 0, ice: 0, lightning: 0, wind: 0 });
   const [cardCooldownUntil, setCardCooldownUntil] = useState<Partial<Record<ElementId, number>>>({});
   const [crashError, setCrashError] = useState<unknown>(null);
@@ -106,12 +116,17 @@ export function Battle({ engine, renderer, createInitialState, canvasRef: appCan
     }
   }
 
-  // ---- mount / unmount: own the loop and the throttled coarse-state sync ----
+  // ---- mount / unmount: own the loop, the renderer, and the throttled coarse-state sync ----
   useEffect(() => {
     if (!canvasRef.current || !activeStageId) return;
     const canvas = canvasRef.current;
     canvas.width = WORLD_W * 2;
     canvas.height = WORLD_H * 2;
+
+    // Built here, not passed in already-built: canvasRef.current is only guaranteed
+    // non-null inside this effect (it runs after the <canvas> below has mounted).
+    const { renderer, destroy: destroyRenderer } = createRenderer(canvas);
+    destroyRendererRef.current = destroyRenderer;
 
     const loop = new GameLoop(engine, renderer, {
       onEvents: handleEvents,
@@ -141,9 +156,12 @@ export function Battle({ engine, renderer, createInitialState, canvasRef: appCan
       window.clearInterval(syncInterval);
       loop.destroy();
       loopRef.current = null;
+      destroyRendererRef.current?.();
+      destroyRendererRef.current = null;
     };
-    // Intentionally scoped to activeStageId only: this effect owns the loop's whole
-    // lifecycle (mount -> start -> destroy on unmount/stage change), not per-render sync.
+    // Intentionally scoped to activeStageId only: this effect owns the loop's (and now
+    // the renderer's) whole lifecycle — mount -> start -> destroy on unmount/stage
+    // change — not per-render sync.
   }, [activeStageId]);
 
   // keep the loop's speed in sync with settings without restarting the battle
@@ -265,13 +283,12 @@ export function Battle({ engine, renderer, createInitialState, canvasRef: appCan
         paused={battlePhase === "paused"}
         onCycleSpeed={cycleSpeed}
         onTogglePause={togglePause}
+        showStartWave={battlePhase === "ready"}
+        onStartWave={() => loopRef.current?.dispatch({ t: "startWave" })}
       />
       <div className="field">
         <canvas
-          ref={(node) => {
-            canvasRef.current = node;
-            appCanvasRef?.(node);
-          }}
+          ref={canvasRef}
           onPointerDown={onFieldPointerDown}
           role="application"
           aria-label="Battlefield. Use number keys 1 to 4 to select a mage, arrow keys to move the placement cursor, Enter to place, Escape to deselect."
@@ -282,7 +299,7 @@ export function Battle({ engine, renderer, createInitialState, canvasRef: appCan
             countdownSeconds={interwaveRemaining}
             countdownTotal={interwaveTotalRef.current}
             preview={[]}
-            skipBonusMana={30}
+            skipBonusMana={SKIP_INTERWAVE_BONUS_MANA}
             reducedMotion={settings.reducedMotion}
             onReady={() => loopRef.current?.dispatch({ t: "startWave" })}
             onSkip={() => loopRef.current?.dispatch({ t: "skipInterwave" })}
@@ -295,17 +312,14 @@ export function Battle({ engine, renderer, createInitialState, canvasRef: appCan
         )}
       </div>
       <div className="bottom">
-        {currentTower ? (
-          <TowerPanel
-            tower={{ towerId: currentTower.id, element: currentTower.el, tier: currentTower.tier }}
-            mana={mana}
-            onUpgrade={() => loopRef.current?.dispatch({ t: "upgrade", towerId: currentTower.id })}
-            onSell={() => {
-              loopRef.current?.dispatch({ t: "sell", towerId: currentTower.id });
-              selectTower(null);
-            }}
-          />
-        ) : (
+        {/* Both slots are always in the DOM, stacked in the same CSS grid cell (see
+         * .bottom-slot) — only the inactive one gets visibility:hidden. This reserves
+         * layout space for whichever is taller, so .bottom's height never changes when
+         * a tower gets selected/deselected. It used to conditionally render only one:
+         * the rail and TowerPanel have different natural heights, so .field (flex: 1
+         * above .bottom) resized on every selection, and the canvas resizing inside it
+         * read as "everything moves". */}
+        <div className="bottom-slot" aria-hidden={currentTower != null} style={{ visibility: currentTower ? "hidden" : "visible" }}>
           <div className="rail">
             {ELEMENT_ORDER.map((el, i) => (
               <MageCard
@@ -317,7 +331,20 @@ export function Battle({ engine, renderer, createInitialState, canvasRef: appCan
               />
             ))}
           </div>
-        )}
+        </div>
+        <div className="bottom-slot" aria-hidden={currentTower == null} style={{ visibility: currentTower ? "visible" : "hidden" }}>
+          {currentTower && (
+            <TowerPanel
+              tower={{ towerId: currentTower.id, element: currentTower.el, tier: currentTower.tier }}
+              mana={mana}
+              onUpgrade={() => loopRef.current?.dispatch({ t: "upgrade", towerId: currentTower.id })}
+              onSell={() => {
+                loopRef.current?.dispatch({ t: "sell", towerId: currentTower.id });
+                selectTower(null);
+              }}
+            />
+          )}
+        </div>
       </div>
     </>
   );

@@ -25,6 +25,9 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Gate the deploy on the same check CI runs on PRs — a broken main should never
+      # publish, even if this workflow is triggered directly (workflow_dispatch).
+      - run: pnpm check
       - run: pnpm build
       - uses: actions/upload-pages-artifact@v3
         with:

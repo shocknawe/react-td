@@ -4,7 +4,11 @@ import tseslint from "typescript-eslint";
 const BANNED_GLOBALS = ["Math.random", "Date", "performance", "window", "document", "localStorage", "sessionStorage"];
 
 export default tseslint.config(
-  { ignores: ["dist", "design", "references", "node_modules"] },
+  // .claude and openspec are vendored Claude Code skill/agent tooling, not app source —
+  // they ship their own scripts (with their own style/toolchain) that this config was
+  // never meant to lint. Without this, invoking a skill that materializes new scripts
+  // under .claude/skills/** breaks `pnpm check` on unrelated files.
+  { ignores: ["dist", "design", "references", "node_modules", ".claude", "openspec"] },
   ...tseslint.configs.recommended,
   {
     // The game/ purity boundary. Prose does not enforce this; these rules plus the

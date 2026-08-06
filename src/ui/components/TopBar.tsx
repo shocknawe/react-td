@@ -8,12 +8,31 @@ export type TopBarProps = {
   paused: boolean;
   onCycleSpeed: () => void;
   onTogglePause: () => void;
+  /**
+   * True only during the pre-battle "ready" phase (before wave 1 has ever started).
+   * Every later wave transition goes through InterwaveOverlay's READY button, which
+   * only renders during `battlePhase === "interwave"` — wave 1 begins from "ready",
+   * a phase that overlay never covers, so without this the sim sits at WAVE 0/N
+   * forever with nothing to dispatch `startWave`.
+   */
+  showStartWave: boolean;
+  onStartWave: () => void;
 };
 
 /** Battle HUD: wave counter, kill counter, speed toggle, pause. Crystal HP is deliberately
  * NOT here — it lives in-world as the three-segment leak ring render/ draws on the
  * crystal, so "am I losing" stays pre-attentive rather than a HUD number to parse. */
-export function TopBar({ wave, totalWaves, kills, speed, paused, onCycleSpeed, onTogglePause }: TopBarProps) {
+export function TopBar({
+  wave,
+  totalWaves,
+  kills,
+  speed,
+  paused,
+  onCycleSpeed,
+  onTogglePause,
+  showStartWave,
+  onStartWave,
+}: TopBarProps) {
   return (
     <div className="topbar">
       <div className="hud-pill">
@@ -22,6 +41,11 @@ export function TopBar({ wave, totalWaves, kills, speed, paused, onCycleSpeed, o
       <div className="hud-pill">
         <span aria-hidden="true">☠</span> <span className="num">{kills}</span>
       </div>
+      {showStartWave && (
+        <button type="button" className="btn btn-primary" onClick={onStartWave} aria-label="Start wave 1">
+          START
+        </button>
+      )}
       <div className="spacer" />
       <button
         type="button"

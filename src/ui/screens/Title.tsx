@@ -35,31 +35,35 @@ export function Title() {
           backgroundPosition: "center",
         }}
       >
-        {/* dark scrim top and bottom, per spec, over the hero image */}
+        {/* dark scrim top and bottom, per spec, over the hero image. z-index: -1 rather
+         * than giving every content sibling z-index: 1 — this is the only element that
+         * actually needs explicit stacking (it's the one thing that must sit BEHIND
+         * normal-flow content despite being position:absolute). */}
         <div
           aria-hidden="true"
           style={{
             position: "absolute",
             inset: 0,
+            zIndex: -1,
             background:
               "linear-gradient(180deg, rgba(7,10,20,.75) 0%, transparent 30%, transparent 65%, rgba(7,10,20,.85) 100%)",
           }}
         />
-        <div style={{ textAlign: "center", zIndex: 1 }}>
-          <div
-            className="label-en"
-            style={{ fontSize: 46, color: "var(--gold-bright)", textShadow: "0 2px 18px rgba(212,168,67,.5)" }}
-          >
-            React<span style={{ color: "#c8474a" }}> TD</span>
-          </div>
-          <span className="kanji" style={{ fontSize: 12, marginTop: 8 }}>
-            リアクトTD
-          </span>
-          <span className="kanji" style={{ fontSize: 10, marginTop: 4, opacity: 0.55 }}>
+        <div style={{ textAlign: "center" }}>
+          {/* The dedicated logo lockup from references/392B53D7... (not the earlier
+           * screenshot-cropped version — that was a UI mockup with the logo incidentally
+           * in one panel; this file IS the logo, full resolution, clean edges). Background-
+           * removed via color-distance keying against its cream backdrop — see
+           * design/assets/logo/logo-wordmark-source.png for the full-res matte and the
+           * one-off script that produced it. Real alpha, so no blend-mode/mask tricks
+           * needed here. Already carries its own "リアクトTD" lockup text, so the second
+           * kanji line below is now the only live-rendered one. */}
+          <img src="/art/logo-wordmark.png" alt="React TD" style={{ width: 320, maxWidth: "80vw" }} />
+          <span className="kanji" style={{ fontSize: 10, marginTop: 8, opacity: 0.55 }}>
             魔法の塔防衛
           </span>
         </div>
-        <div style={{ display: "flex", gap: 6, marginTop: 26, zIndex: 1 }} aria-hidden="true">
+        <div style={{ display: "flex", gap: 6, marginTop: 26 }} aria-hidden="true">
           {ELEMENT_ORDER.map((el) => (
             <span
               key={el}
@@ -76,7 +80,7 @@ export function Title() {
         <button
           type="button"
           className="btn btn-primary btn-lg"
-          style={{ marginTop: 40, zIndex: 1 }}
+          style={{ marginTop: 40 }}
           onClick={() => goTo("stageSelect")}
           autoFocus
         >
